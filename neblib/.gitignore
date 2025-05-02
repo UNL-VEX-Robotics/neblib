@@ -3,7 +3,3 @@
 compile_commands.json
 
 .vscode/
-
-vex/
-
-makefile
