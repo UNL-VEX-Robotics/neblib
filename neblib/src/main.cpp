@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
-/*    Author:       closm                                                     */
+/*    Author:       SKERS                                                     */
 /*    Created:      5/1/2025, 8:12:05 PM                                      */
 /*    Description:  V5 project                                                */
 /*                                                                            */
