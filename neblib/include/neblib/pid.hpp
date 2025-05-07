@@ -63,17 +63,17 @@ namespace neblib
             bool isSettled(double error, double derivative);
         };
 
-    private:
-        enum ExitConditionType
-        {
-            SETTLE_TIME,
-            DERIVATIVE
-        };
-
+    public:
         class ExitCondition
         {
 
         private:
+            enum ExitConditionType
+            {
+                SETTLE_TIME,
+                DERIVATIVE
+            };
+            
             ExitConditionType type;
             union
             {
@@ -103,6 +103,7 @@ namespace neblib
             bool isSettled(double error, double derivatrive);
         };
 
+    private:
         Gains gains;
         ExitCondition exitCondition;
 

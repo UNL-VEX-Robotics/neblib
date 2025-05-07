@@ -1,3 +1,5 @@
+#pragma once
+
 namespace neblib {
 
 template<typename T>

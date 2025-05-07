@@ -21,13 +21,13 @@ bool neblib::PID::DerivativeExitConditions::isSettled(double error, double deriv
     return error <= errorTolerance && derivative <= derivativeTolerance;
 }
 
-neblib::PID::ExitCondition::ExitCondition(const SettleTimeExitConditions &settleTimeExitConditions) : type(neblib::PID::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {};
+neblib::PID::ExitCondition::ExitCondition(const SettleTimeExitConditions &settleTimeExitConditions) : type(neblib::PID::ExitCondition::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {};
 
-neblib::PID::ExitCondition::ExitCondition(const DerivativeExitConditions &derivativeExitConditions) : type(neblib::PID::ExitConditionType::DERIVATIVE), derivativeExitConditions(derivativeExitConditions) {};
+neblib::PID::ExitCondition::ExitCondition(const DerivativeExitConditions &derivativeExitConditions) : type(neblib::PID::ExitCondition::ExitConditionType::DERIVATIVE), derivativeExitConditions(derivativeExitConditions) {};
 
-neblib::PID::ExitCondition::ExitCondition(SettleTimeExitConditions &&settleTimeExitConditions) : type(neblib::PID::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {};
+neblib::PID::ExitCondition::ExitCondition(SettleTimeExitConditions &&settleTimeExitConditions) : type(neblib::PID::ExitCondition::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {};
 
-neblib::PID::ExitCondition::ExitCondition(DerivativeExitConditions &&derivativeExitConditions) : type(neblib::PID::ExitConditionType::DERIVATIVE), derivativeExitConditions(derivativeExitConditions) {};
+neblib::PID::ExitCondition::ExitCondition(DerivativeExitConditions &&derivativeExitConditions) : type(neblib::PID::ExitCondition::ExitConditionType::DERIVATIVE), derivativeExitConditions(derivativeExitConditions) {};
 
 bool neblib::PID::ExitCondition::isSettled(double error, double derivative)
 {
@@ -72,6 +72,6 @@ double neblib::PID::getOutput(double error, double minOutput, double maxOutput)
         return output;
 }
 
-double neblib::PID::getOutput(double error) { return getOutput(error, infinity(), -infinity()); }
+double neblib::PID::getOutput(double error) { return getOutput(error, INFINITY, -INFINITY); }
 
 bool neblib::PID::isSettled() { return settled; }
