@@ -20,8 +20,8 @@ namespace neblib
         {
             vex::motor *motor;
             vex::motor_group *motorGroup;
-            vex::rotation *rotation;
-            vex::encoder *encoder;
+            vex::rotation rotation;
+            vex::encoder encoder;
         };
 
         double inchesPerDegree;
@@ -41,12 +41,12 @@ namespace neblib
         /// @param rotation the V5 rotation sensor that is used
         /// @param wheelDiameter the diameter of the wheel(s)
         /// @param ratio the gear ratio from wheel to rotation sensor (wheel gear teeth * rotation gear teeth)
-        TrackerWheel(vex::rotation &rotation, double wheelDiameter, double ratio = 1.0);
+        TrackerWheel(vex::rotation &&rotation, double wheelDiameter, double ratio = 1.0);
         /// @brief Creates a tracker wheel
         /// @param encoder the optical shaft encoder that is used
         /// @param wheelDiameter the diameter of the wheel(s)
         /// @param ratio the gear ratio from wheel to encoder (wheel gear teeth * encoder gear teeth)
-        TrackerWheel(vex::encoder &encoder, double wheelDiameter, double ratio = 1.0);
+        TrackerWheel(vex::encoder &&encoder, double wheelDiameter, double ratio = 1.0);
 
         /// @brief Gets the position of the tracker wheel in degrees
         /// @return tracker wheel position in degrees

@@ -4,9 +4,9 @@ neblib::TrackerWheel::TrackerWheel(vex::motor &motor, double wheelDiameter, doub
 
 neblib::TrackerWheel::TrackerWheel(vex::motor_group &motorGroup, double wheelDiameter, double ratio) : type(V5_MOTOR_GROUP), motorGroup(&motorGroup), inchesPerDegree(wheelDiameter * ratio / 360) {};
 
-neblib::TrackerWheel::TrackerWheel(vex::rotation &rotation, double wheelDiameter, double ratio) : type(V5_ROTATION), rotation(&rotation), inchesPerDegree(wheelDiameter * ratio / 360) {};
+neblib::TrackerWheel::TrackerWheel(vex::rotation &&rotation, double wheelDiameter, double ratio) : type(V5_ROTATION), rotation(rotation), inchesPerDegree(wheelDiameter * ratio / 360) {};
 
-neblib::TrackerWheel::TrackerWheel(vex::encoder &encoder, double wheelDiameter, double ratio) : type(OS_ENCODER), encoder(&encoder), inchesPerDegree(wheelDiameter * ratio / 360) {};
+neblib::TrackerWheel::TrackerWheel(vex::encoder &&encoder, double wheelDiameter, double ratio) : type(OS_ENCODER), encoder(encoder), inchesPerDegree(wheelDiameter * ratio / 360) {};
 
 double neblib::TrackerWheel::getDegrees()
 {
@@ -17,9 +17,9 @@ double neblib::TrackerWheel::getDegrees()
     case V5_MOTOR_GROUP:
         return motorGroup->position(vex::rotationUnits::deg);
     case V5_ROTATION:
-        return rotation->position(vex::rotationUnits::deg);
+        return rotation.position(vex::rotationUnits::deg);
     case OS_ENCODER:
-        return encoder->position(vex::rotationUnits::deg);
+        return encoder.position(vex::rotationUnits::deg);
     }
     return 0.0;
 }
@@ -35,9 +35,9 @@ void neblib::TrackerWheel::setDegrees(double degrees)
     case V5_MOTOR_GROUP:
         motorGroup->setPosition(degrees, vex::rotationUnits::deg);
     case V5_ROTATION:
-        rotation->setPosition(degrees, vex::rotationUnits::deg);
+        rotation.setPosition(degrees, vex::rotationUnits::deg);
     case OS_ENCODER:
-        encoder->setPosition(degrees, vex::rotationUnits::deg);
+        encoder.setPosition(degrees, vex::rotationUnits::deg);
     }
 }
 
