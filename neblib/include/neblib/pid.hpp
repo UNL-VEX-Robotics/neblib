@@ -23,6 +23,8 @@ namespace neblib
             /// @param kD derivative gain
             /// @param windupTolerance range where integral can wind up
             Gains(double kP, double kI, double kD, double windupTolerance, bool resetIntegralOnCross = false);
+            /// @brief Default constructor
+            Gains();
         };
 
         class SettleTimeExitConditions
@@ -71,7 +73,8 @@ namespace neblib
             enum ExitConditionType
             {
                 SETTLE_TIME,
-                DERIVATIVE
+                DERIVATIVE,
+                NONE
             };
             
             ExitConditionType type;
@@ -79,6 +82,7 @@ namespace neblib
             {
                 SettleTimeExitConditions settleTimeExitConditions;
                 DerivativeExitConditions derivativeExitConditions;
+                bool isNull;
             };
 
         public:
@@ -95,6 +99,8 @@ namespace neblib
             /// @brief Constructor for ExitConditions class
             /// @param derivativeExitConditions exit conditions based on derivative
             ExitCondition(DerivativeExitConditions &&derivativeExitConditions);
+            /// @brief Default constructor
+            ExitCondition();
 
             /// @brief Determines if the PID is settled
             /// @param error current error

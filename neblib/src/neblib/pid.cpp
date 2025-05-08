@@ -2,6 +2,8 @@
 
 neblib::PID::Gains::Gains(double kP, double kI, double kD, double windupTolerance, bool resetIntegralOnCross) : kP(kP), kI(kI), kD(kD), windupTolerance(windupTolerance), resetIntegralOnCross(resetIntegralOnCross) {};
 
+neblib::PID::Gains::Gains() : kP(0.0), kI(0.0), kD(0.0), windupTolerance(0.0), resetIntegralOnCross(false) {};
+
 neblib::PID::SettleTimeExitConditions::SettleTimeExitConditions(double tolerance, int timeStep, int settleTime) : tolerance(tolerance), timeStep(timeStep), settleTime(settleTime), timeSettled(0) {};
 
 bool neblib::PID::SettleTimeExitConditions::isSettled(double error, double _)
@@ -29,6 +31,8 @@ neblib::PID::ExitCondition::ExitCondition(SettleTimeExitConditions &&settleTimeE
 
 neblib::PID::ExitCondition::ExitCondition(DerivativeExitConditions &&derivativeExitConditions) : type(neblib::PID::ExitCondition::ExitConditionType::DERIVATIVE), derivativeExitConditions(derivativeExitConditions) {};
 
+neblib::PID::ExitCondition::ExitCondition() : type(neblib::PID::ExitCondition::ExitConditionType::NONE), isNull(true) {};
+
 bool neblib::PID::ExitCondition::isSettled(double error, double derivative)
 {
     switch (type)
@@ -37,6 +41,8 @@ bool neblib::PID::ExitCondition::isSettled(double error, double derivative)
         return settleTimeExitConditions.isSettled(error);
     case DERIVATIVE:
         return derivativeExitConditions.isSettled(error, derivative);
+    case NONE:
+        return true;
     }
     return false;
 }
