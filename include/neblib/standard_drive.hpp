@@ -1,16 +1,19 @@
 #pragma once
 #include "vex.h"
+#include "neblib/inertial_wrapper.hpp"
 
-namespace neblib {
+namespace neblib
+{
 
-    class StandardDrive {
+    class StandardDrive
+    {
     private:
         vex::motor_group leftMotorGroup;
         vex::motor_group rightMotorGroup;
-        vex::inertial IMU;
-        
+        IMUWrapper IMU;
+
     public:
-        StandardDrive(vex::motor_group &&leftMotorGroup, vex::motor_group &&rightMotorGroup, vex::inertial &&IMU);
+        StandardDrive(vex::motor_group &&leftMotorGroup, vex::motor_group &&rightMotorGroup, neblib::IMUWrapper &&IMU);
 
         void driveTank(double leftInput, double rightInput, vex::voltageUnits unit);
         void driveTank(double leftInput, double rightInput, vex::velocityUnits unit);
