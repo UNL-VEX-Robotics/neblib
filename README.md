@@ -1,7 +1,8 @@
 # neblib
-A VEX V5 library created by VURC team SKERS. The intent of this library is to minimize the amount of code that needs rewritten between robots.
+A VEX V5 library created by VURC team SKERS. The intent of this library is to minimize the amount of code that needs rewritten between robots
 
 ## Features
+* PID class with multiple exit condition types
 * Standard "Tank" Drivetrain class
   * Simple velocity setting designed to easily accomodate controller input
 
