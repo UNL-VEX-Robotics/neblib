@@ -8,6 +8,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
+#include "neblib/odometry.hpp"
 
 using namespace vex;
 
@@ -15,6 +16,14 @@ using namespace vex;
 competition Competition;
 
 // define your global instances of motors and other devices here
+brain Brain;
+
+vex::inertial imu(PORT20);
+
+neblib::TrackerWheel parallel(vex::rotation(PORT11), 2.0);
+neblib::TrackerWheel perpendicular(vex::rotation(PORT10), 2.0);
+
+neblib::Odometry odometry(&parallel, 1.625, &perpendicular, 0.75, &imu);
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -59,16 +68,40 @@ void autonomous(void) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol(void) {
-  // User control code here, inside the loop
-  while (1) {
-    // This is the main execution loop for the user control program.
-    // Each time through the loop your program should update motor + servo
-    // values based on feedback from the joysticks.
+  Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("Calibrating... ");
 
-    // ........................................................................
-    // Insert user code here. This is where you use the joystick values to
-    // update your motors, etc.
-    // ........................................................................
+  odometry.calibrate();
+  odometry.setPose(0, 0, 0);
+
+  while (1) {
+    Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Parallel: ");
+    Brain.Screen.print(parallel.getPosition());
+
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print("Perpendicular: ");
+    Brain.Screen.print(perpendicular.getPosition());
+
+    neblib::Pose pose = odometry.updatePose();
+
+    Brain.Screen.setCursor(3, 1);
+    Brain.Screen.print("X: ");
+    Brain.Screen.print(pose.x);
+
+    Brain.Screen.setCursor(4, 1);
+    Brain.Screen.print("Y: ");
+    Brain.Screen.print(pose.y);
+
+    Brain.Screen.setCursor(5, 1);
+    Brain.Screen.print("H: ");
+    Brain.Screen.print(pose.heading);
+
+    Brain.Screen.setCursor(6, 1);
+    Brain.Screen.print("H2: ");
+    Brain.Screen.print(imu.heading(deg));
 
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.

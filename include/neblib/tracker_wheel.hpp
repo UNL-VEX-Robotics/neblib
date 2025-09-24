@@ -7,13 +7,13 @@ namespace neblib
     class TrackerWheel
     {
     private:
-        enum Device
+        enum DeviceType
         {
             ROTATION,
             OS_ENCODER
         };
 
-        Device deviceType;
+        DeviceType deviceType;
 
         union
         {
@@ -23,14 +23,14 @@ namespace neblib
 
         float wheelDiameter;
 
-        float previousPosition;
+        float previousPosition = 0;
 
     public:
         TrackerWheel(vex::rotation &&rotation, float wheelDiameter);
         TrackerWheel(vex::encoder &&encoder, float wheelDiameter);
+        ~TrackerWheel();
 
         float getPosition();
-        float getChangeInPosition();
     };
 
 }

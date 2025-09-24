@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <memory>
 #include "vex.h"
 
 namespace neblib

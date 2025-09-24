@@ -1,29 +1,35 @@
 #include "neblib/tracker_wheel.hpp"
 
-neblib::TrackerWheel::TrackerWheel(vex::rotation &&rotation, float wheelDiameter) : deviceType(ROTATION), rotation(rotation), wheelDiameter(wheelDiameter), previousPosition(0) {}
+#include <iostream>
 
-neblib::TrackerWheel::TrackerWheel(vex::encoder &&encoder, float wheelDiameter) : deviceType(OS_ENCODER), encoder(encoder), wheelDiameter(wheelDiameter), previousPosition(0) {}
+neblib::TrackerWheel::TrackerWheel(vex::rotation &&rotation, float wheelDiameter) : deviceType(ROTATION), rotation(rotation), wheelDiameter(wheelDiameter) {}
+
+neblib::TrackerWheel::TrackerWheel(vex::encoder &&encoder, float wheelDiameter) : deviceType(OS_ENCODER), encoder(encoder), wheelDiameter(wheelDiameter) {}
+
+neblib::TrackerWheel::~TrackerWheel()
+{
+    switch (deviceType)
+    {
+    case ROTATION:
+        rotation.~rotation();
+        break;
+    case OS_ENCODER:
+        encoder.~encoder();
+        break;
+    }
+}
 
 float neblib::TrackerWheel::getPosition()
 {
-    float conversion = wheelDiameter * M_PI / 360;
     float currentPosition;
     switch (deviceType)
     {
     case ROTATION:
-        currentPosition = rotation.position(vex::rotationUnits::deg) * conversion;
+        currentPosition = rotation.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
+        break;
     case OS_ENCODER:
-        currentPosition = encoder.position(vex::rotationUnits::deg) * conversion;
+        currentPosition = encoder.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
+        break;
     }
-    previousPosition = currentPosition;
     return currentPosition;
-}
-
-float neblib::TrackerWheel::getChangeInPosition()
-{
-    float currentPosition = this->getPosition();
-    float changeInPosition = currentPosition - previousPosition;
-    previousPosition = currentPosition;
-
-    return changeInPosition;
 }

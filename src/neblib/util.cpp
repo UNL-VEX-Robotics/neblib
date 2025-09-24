@@ -1,5 +1,4 @@
 #include "neblib/util.hpp"
-#include "util.hpp"
 
 template<class F>
 vex::task neblib::launchTask(F&& function) {
