@@ -43,15 +43,14 @@ void pre_auton(void) {
   // Example: clearing encoders, setting servo positions, ...
 }
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
+int task_a_odometry()
+{
+  while(true)
+  {
+    odometry.updatePose();
+    task::sleep(10);
+  }
+}
 
 void autonomous(void) {
   // ..........................................................................
@@ -77,27 +76,20 @@ void usercontrol(void) {
   odometry.calibrate();
   odometry.setPose(0, 0, 0);
 
+  vex::task a = vex::task(task_a_odometry);
+
   while (1) {
-    Brain.Screen.clearScreen();
+    neblib::Pose pose = odometry.getPose();
+
     Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Parallel: ");
-    Brain.Screen.print(parallel.getPosition());
-
-    Brain.Screen.setCursor(2, 1);
-    Brain.Screen.print("Perpendicular: ");
-    Brain.Screen.print(perpendicular.getPosition());
-
-    neblib::Pose pose = odometry.updatePose();
-
-    Brain.Screen.setCursor(3, 1);
     Brain.Screen.print("X: ");
     Brain.Screen.print(pose.x);
 
-    Brain.Screen.setCursor(4, 1);
+    Brain.Screen.setCursor(2, 1);
     Brain.Screen.print("Y: ");
     Brain.Screen.print(pose.y);
 
-    Brain.Screen.setCursor(5, 1);
+    Brain.Screen.setCursor(3, 1);
     Brain.Screen.print("H: ");
     Brain.Screen.print(pose.heading);
 
