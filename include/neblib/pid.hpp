@@ -4,10 +4,11 @@
 
 namespace neblib
 {
-
+    /// @brief Class for PIDs
     class PID
     {
     public:
+        /// @brief Struct for gains
         struct Gains
         {
             double kP;
@@ -18,7 +19,7 @@ namespace neblib
 
             /**
              * @brief Constructor for the PID Gains struct
-             * 
+             *
              * @param kP proportional gain
              * @param kI integral gain
              * @param kD derivative gain
@@ -28,6 +29,7 @@ namespace neblib
             Gains(double kP, double kI, double kD, double windupRange, bool resetWindupOnSignChange = true);
         };
 
+        /// @brief Class for exit conditions using derivative and error tolerance
         class DerivativeExitConditions
         {
         private:
@@ -37,7 +39,7 @@ namespace neblib
         public:
             /**
              * @brief Constructor for the PID derivative based exit condition
-             * 
+             *
              * @param errorTolerance range that error must be within to exit
              * @param derivativeTolerance range that derivative must be within to exit
              */
@@ -45,15 +47,16 @@ namespace neblib
 
             /**
              * @brief Determines if the PID has met the exit conditions
-             * 
+             *
              * @param error the current error of the PID
              * @param derivative the current derivative of the PID
-             * 
+             *
              * @return true if PID has met the exit conditions, false otherwise
              */
             bool isSettled(double error, double derivative);
         };
 
+        /// @brief Class for exit conditions using error tolerance and settle time
         class SettleTimeExitConditions
         {
         private:
@@ -63,10 +66,9 @@ namespace neblib
             int cycleTime;
 
         public:
-
             /**
              * @brief Constructor for the PID settle time based exit conditions
-             * 
+             *
              * @param tolerance the error tolerance to meet the exit conditions
              * @param settleTime the length of time (milliseconds) that the error must be within the tolerance
              * @param cycleTime the length of time (milliseconds) that the loop takes
@@ -75,15 +77,16 @@ namespace neblib
 
             /**
              * @brief Determines if the PID exit conditions have been met
-             * 
+             *
              * @param error the current PID error
-             * 
+             *
              * @return true if the exit conditions have been met, false otherwise
              */
             bool isSettled(double error);
         };
 
     public:
+        /// @brief Wrapper class to contain derivative and settle time exit conditions
         class ExitConditions
         {
         private:
@@ -109,7 +112,7 @@ namespace neblib
              * @brief Constructor for ExitConditions using DerivativeExitConditions using move semantics
              */
             ExitConditions(DerivativeExitConditions &&derivativeExitConditions);
-            
+
             /**
              * @brief Constructor for ExitConditions using SettleTimeExitConditions passed by reference
              */
@@ -121,10 +124,10 @@ namespace neblib
 
             /**
              * @brief Determines if the PID has settled
-             * 
+             *
              * @param error the current error of the PID
              * @param derivative the current derivative of the PID
-             * 
+             *
              * @return true if PID has met exit conditions, false otherwise
              */
             bool isSettled(double error, double derivative);
@@ -135,19 +138,19 @@ namespace neblib
         bool settled;
         double integral;
         double previousError;
-        bool hasPreviousError;        
+        bool hasPreviousError;
 
     public:
         /**
          * @brief Constructor for PID using derivative based exit conditions passed by reference
-         * 
+         *
          * @param gains Gains struct
          * @param derivativeExitConditions derivative based exit conditions
          */
         PID(const Gains &gains, const DerivativeExitConditions &derivativeExitConditions);
         /**
          * @brief Constructor for PID using derivative based exit conditions using move semantics
-         * 
+         *
          * @param gains Gains struct
          * @param derivativeExitConditions derivative based exit conditions
          */
@@ -155,14 +158,14 @@ namespace neblib
 
         /**
          * @brief Constructor for PID using settle time based exit conditions passed by reference
-         * 
+         *
          * @param gains Gains struct
          * @param settleTimeExitConditions settle time based exit conditions
          */
         PID(const Gains &gains, const SettleTimeExitConditions &settleTimeExitConditions);
         /**
          * @brief Constructor for PID using settle time based exit conditions using move semantics
-         * 
+         *
          * @param gains Gains struct
          * @param settleTimeExitConditions settle time based exit conditions
          */
@@ -170,30 +173,31 @@ namespace neblib
 
         /**
          * @brief Returns the output of the PID
-         * 
+         *
          * @param error the current error or distance to the target
-         * 
+         *
          * @return the PID output
          */
         double getOutput(double error);
         /**
          * @brief Returns the output of the PID
-         * 
+         *
          * @param error the current error or distance to the target
          * @param minOutput the minimum acceptable output value
          * @param maxOutput the maximum acceptable output value
-         * 
+         *
          * @return the PID output
          */
         double getOutput(double error, double minOutput, double maxOutput);
 
         /**
          * @brief Determines if the PID is settled
-         * 
+         *
          * @return true if PID is settled, false otherwise
          */
         bool isSettled();
 
+        /// @brief Resets the PID object
         void reset();
     };
 
