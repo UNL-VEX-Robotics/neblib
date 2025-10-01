@@ -75,3 +75,10 @@ double neblib::PID::getOutput(double error, double minOutput, double maxOutput)
 }
 
 bool neblib::PID::isSettled() { return settled; }
+
+void neblib::PID::reset()
+{
+    settled = false;
+    integral = 0;
+    hasPreviousError = false;
+}

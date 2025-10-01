@@ -8,6 +8,16 @@ neblib::XDrive::XDrive(vex::motor &leftFront, vex::motor &rightFront, vex::motor
 {
 }
 
+void neblib::XDrive::setLinearPID(neblib::PID* pid)
+{
+    linearPID = pid;
+}
+
+void neblib::XDrive::setRotationalPID(neblib::PID* pid)
+{
+    rotationalPID = pid;
+}
+
 void neblib::XDrive::driveLocal(float drive, float strafe, float turn, vex::velocityUnits unit)
 {
     leftFront.spin(vex::directionType::fwd, drive + strafe + turn, unit);
@@ -46,4 +56,37 @@ void neblib::XDrive::driveGlobal(float drive, float strafe, float turn, vex::vel
 void neblib::XDrive::driveGlobal(float drive, float strafe, float turn, vex::voltageUnits unit)
 {
     this->driveAngle(hypotf(drive, strafe), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
+}
+
+void neblib::XDrive::stop(vex::brakeType stopType)
+{
+    leftFront.stop(stopType);
+    rightFront.stop(stopType);
+    leftBack.stop(stopType);
+    rightBack.stop(stopType);
+}
+
+float neblib::XDrive::turnFor(float deg, float minOutput, float maxOutput, float timeout)
+{
+    rotationalPID->reset();
+    float target = imu->rotation(vex::rotationUnits::deg) + deg;
+    float time = 0.0;
+    
+    while (!rotationalPID->isSettled() && time < timeout)
+    {
+        float error = target - imu->rotation(vex::rotationUnits::deg);
+        float output = rotationalPID->getOutput(error, minOutput, maxOutput);
+
+        this->driveLocal(0.0, 0.0, output, vex::voltageUnits::volt);
+
+        vex::task::sleep(10);
+        time += 0.01;
+    }
+
+    this->stop(vex::brakeType::hold);
+}
+
+float neblib::XDrive::turnFor(float deg, float timeout)
+{
+    return this->turnFor(deg, -infinityf(), infinityf(), timeout);
 }

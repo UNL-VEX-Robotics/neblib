@@ -193,6 +193,8 @@ namespace neblib
          * @return true if PID is settled, false otherwise
          */
         bool isSettled();
+
+        void reset();
     };
 
 }
