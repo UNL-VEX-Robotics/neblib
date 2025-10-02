@@ -48,14 +48,14 @@ void neblib::XDrive::driveAngle(float velocity, float deg, float turn, vex::volt
     this->driveLocal(y, x, turn, unit);
 }
 
-void neblib::XDrive::driveGlobal(float drive, float strafe, float turn, vex::velocityUnits unit)
+void neblib::XDrive::driveGlobal(float x, float y, float turn, vex::velocityUnits unit)
 {
-    this->drvieAngle(hypotf(drive, strafe), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
+    this->drvieAngle(hypotf(x, y), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
 }
 
-void neblib::XDrive::driveGlobal(float drive, float strafe, float turn, vex::voltageUnits unit)
+void neblib::XDrive::driveGlobal(float x, float y, float turn, vex::voltageUnits unit)
 {
-    this->driveAngle(hypotf(drive, strafe), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
+    this->driveAngle(hypotf(x, y), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
 }
 
 void neblib::XDrive::stop(vex::brakeType stopType)
@@ -117,4 +117,43 @@ float neblib::XDrive::turnTo(float heading, float minOutput, float maxOutput, fl
 float neblib::XDrive::turnTo(float heading, float timeout)
 {
     return this->turnTo(heading, -infinityf(), infinityf(), timeout);
+}
+
+float neblib::XDrive::driveTo(float x, float y, float minOutput, float maxOutput, float timeout)
+{
+    return this->driveToPose(x, y, imu->heading(vex::rotationUnits::deg), minOutput, maxOutput, timeout);
+}
+
+float neblib::XDrive::driveTo(float x, float y, float timeout)
+{
+    return this->driveToPose(x, y, imu->heading(vex::rotationUnits::deg), -infinityf(), infinityf(), timeout);
+}
+
+float neblib::XDrive::driveToPose(float x, float y, float heading, float minOutput, float maxOutput, float timeout)
+{
+    linearPID->reset();
+    rotationalPID->reset();
+    float time = 0;
+
+    while ((!linearPID->isSettled() || !rotationalPID->isSettled()) && time < timeout)
+    {
+        neblib::Pose currentPose = odometry->getPose();
+        float linearOutput = linearPID->getOutput(hypotf(x - currentPose.x, y - currentPose.y), minOutput, maxOutput);
+        float rotationalOutput = rotationalPID->getOutput(neblib::wrap(heading - imu->heading(vex::rotationUnits::deg), -180, 180));
+
+        float driveAngle = atan2f(x - currentPose.x, y - currentPose.y);
+        this->driveGlobal(linearOutput * cosf(driveAngle), linearOutput * sinf(driveAngle), rotationalOutput, vex::voltageUnits::volt);
+
+        vex::task::sleep(10);
+        time += 0.01;
+    }
+
+    this->stop(vex::brakeType::hold);
+
+    return time;
+}
+
+float neblib::XDrive::driveToPose(float x, float y, float heading, float timeout)
+{
+    return this->driveToPose(x, y, heading, -infinityf(), infinityf(), timeout);
 }

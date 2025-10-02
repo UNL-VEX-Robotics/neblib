@@ -78,18 +78,18 @@ namespace neblib
         void driveAngle(float velocity, float deg, float turn, vex::voltageUnits unit);
 
         /// @brief Drives the robot in the global frame
-        /// @param drive y component
-        /// @param strafe x component
+        /// @param x x component
+        /// @param y y component
         /// @param turn turn component
         /// @param unit velocity unit
-        void driveGlobal(float drive, float strafe, float turn, vex::velocityUnits unit = vex::velocityUnits::pct);
+        void driveGlobal(float x, float y, float turn, vex::velocityUnits unit = vex::velocityUnits::pct);
 
         /// @brief Drives the robot in the global frame
-        /// @param drive y component
-        /// @param strafe x component
+        /// @param x x component
+        /// @param y y component
         /// @param turn turn component
         /// @param unit voltage unit
-        void driveGlobal(float drive, float strafe, float turn, vex::voltageUnits unit);
+        void driveGlobal(float x, float y, float turn, vex::voltageUnits unit);
 
         /// @brief Stops the drivetrain with the desired stop type
         /// @param stopType vex::brakeType to be used, hold by default
@@ -122,5 +122,10 @@ namespace neblib
         /// @param timeout time before PID stops attempting to run if not settled, seconds
         /// @return time it took the function to run, in seconds
         float turnTo(float deg, float timeout = infinityf());
+
+        float driveTo(float x, float y, float minOutput, float maxOutput, float timeout = infinityf());
+        float driveTo(float x, float y, float timeout = infinityf());
+        float driveToPose(float x, float y, float heading, float minOutput, float maxOutput, float timeout = infinityf());
+        float driveToPose(float x, float y, float heading, float timeout = infinityf());
     };
 }

@@ -8,7 +8,6 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
-#include "neblib/odometry.hpp"
 #include "neblib/xdrive.hpp"
 
 using namespace vex;
@@ -25,7 +24,6 @@ neblib::TrackerWheel parallel(vex::rotation(PORT11), 2.0);
 neblib::TrackerWheel perpendicular(vex::rotation(PORT10), 2.0);
 
 neblib::Odometry odometry(&parallel, 1.625, &perpendicular, 0.75, &imu);
-
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
