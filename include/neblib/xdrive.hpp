@@ -30,7 +30,7 @@ namespace neblib
         /// @param rightBack motor group containing the right rear motors
         /// @param odometry pointer to an odometry object
         /// @param imu pointer to a vex inertial object
-        XDrive(vex::motor_group &&leftFront, vex::motor_group &&rightFront, vex::motor_group &&leftBack, vex::motor_group &&rightBack, neblib::Odometry *odometry, vex::inertial *imu);
+        XDrive(vex::motor_group leftFront, vex::motor_group rightFront, vex::motor_group leftBack, vex::motor_group rightBack, neblib::Odometry *odometry, vex::inertial *imu);
 
         /// @brief Constructs an XDrive object using vex motors
         /// @param leftFront  left front motor

@@ -56,7 +56,7 @@ double neblib::PID::getOutput(double error)
 
     if (hasPreviousError)
     {
-        if (sign(error) != sign(previousError))
+        if (neblib::sign(error) != neblib::sign(previousError))
             integral = 0;
     }
 

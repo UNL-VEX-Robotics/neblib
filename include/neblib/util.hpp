@@ -13,8 +13,7 @@ namespace neblib
     /// @brief Gets the sign of a number
     /// @param num a number
     /// @return 1 if positive, -1 if negative, 0 if 0
-    template <typename T>
-    int sign(T num);
+    int sign(double num);
 
     /// @brief Converts degrees to radians
     /// @param deg degrees

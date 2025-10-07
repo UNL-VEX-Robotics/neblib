@@ -11,10 +11,9 @@ vex::task neblib::launchTask(F &&function)
     return 0; }, new std::function<void()>(std::forward<F>(function)));
 }
 
-template <typename T>
-int neblib::sign(T x)
+int neblib::sign(double x)
 {
-  return (T(0) < x) - (x < T(0));
+  return (0 < x) - (x < 0);
 }
 
 float neblib::toRad(float deg)

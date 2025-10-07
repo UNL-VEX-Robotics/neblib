@@ -1,6 +1,7 @@
 #include "neblib/xdrive.hpp"
+#include <iostream>
 
-neblib::XDrive::XDrive(vex::motor_group &&leftFront, vex::motor_group &&rightFront, vex::motor_group &&leftBack, vex::motor_group &&rightBack, neblib::Odometry *odometry, vex::inertial *imu) : leftFront(leftFront), rightFront(rightFront), leftBack(leftBack), rightBack(rightBack), imu(imu), odometry(odometry)
+neblib::XDrive::XDrive(vex::motor_group leftFront, vex::motor_group rightFront, vex::motor_group leftBack, vex::motor_group rightBack, neblib::Odometry *odometry, vex::inertial *imu) : leftFront(leftFront), rightFront(rightFront), leftBack(leftBack), rightBack(rightBack), imu(imu), odometry(odometry)
 {
 }
 
@@ -21,7 +22,7 @@ void neblib::XDrive::setRotationalPID(neblib::PID *pid)
 void neblib::XDrive::driveLocal(float drive, float strafe, float turn, vex::velocityUnits unit)
 {
     leftFront.spin(vex::directionType::fwd, drive + strafe + turn, unit);
-    rightFront.spin(vex::directionType::fwd, drive - drive - turn, unit);
+    rightFront.spin(vex::directionType::fwd, drive - strafe - turn, unit);
     leftBack.spin(vex::directionType::fwd, drive - strafe + turn, unit);
     rightBack.spin(vex::directionType::fwd, drive + strafe - turn, unit);
 }
@@ -29,7 +30,7 @@ void neblib::XDrive::driveLocal(float drive, float strafe, float turn, vex::velo
 void neblib::XDrive::driveLocal(float drive, float strafe, float turn, vex::voltageUnits unit)
 {
     leftFront.spin(vex::directionType::fwd, drive + strafe + turn, unit);
-    rightFront.spin(vex::directionType::fwd, drive - drive - turn, unit);
+    rightFront.spin(vex::directionType::fwd, drive - strafe - turn, unit);
     leftBack.spin(vex::directionType::fwd, drive - strafe + turn, unit);
     rightBack.spin(vex::directionType::fwd, drive + strafe - turn, unit);
 }
@@ -45,17 +46,18 @@ void neblib::XDrive::driveAngle(float velocity, float deg, float turn, vex::volt
 {
     float x = velocity * cosf(neblib::toRad(deg));
     float y = velocity * sinf(neblib::toRad(deg));
+
     this->driveLocal(y, x, turn, unit);
 }
 
 void neblib::XDrive::driveGlobal(float x, float y, float turn, vex::velocityUnits unit)
 {
-    this->drvieAngle(hypotf(x, y), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
+    this->drvieAngle(hypotf(x, y), neblib::toDeg(atan2f(x, y)) + imu->heading(vex::rotationUnits::deg) - 90, turn, unit);
 }
 
 void neblib::XDrive::driveGlobal(float x, float y, float turn, vex::voltageUnits unit)
 {
-    this->driveAngle(hypotf(x, y), -neblib::toRad(imu->heading(vex::rotationUnits::deg)), turn, unit);
+    this->driveAngle(hypotf(x, y), neblib::toDeg(atan2f(x, y)) + imu->heading(vex::rotationUnits::deg) - 90, turn, unit);
 }
 
 void neblib::XDrive::stop(vex::brakeType stopType)
