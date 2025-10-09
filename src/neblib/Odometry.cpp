@@ -47,7 +47,7 @@ neblib::Pose neblib::Odometry::getGlobalChange()
     double polarRadius = hypot(localPose.x, localPose.y);
     double polarAngle = atan2(localPose.y, localPose.x) - averageRotation;
 
-    return Pose(polarRadius * cos(polarAngle), polarRadius*sin(polarAngle), neblib::toDeg(changeInRotation));
+    return Pose(polarRadius * cos(polarAngle), polarRadius * sin(polarAngle), neblib::toDeg(changeInRotation));
 }
 
 neblib::Pose neblib::Odometry::updatePose()

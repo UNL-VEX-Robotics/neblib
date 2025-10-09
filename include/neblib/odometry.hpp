@@ -19,7 +19,7 @@ namespace neblib
         /// @param heading heading of a robot
         Pose(double x, double y, double heading);
 
-        Pose& operator+=(const Pose& other);
+        Pose &operator+=(const Pose &other);
     };
 
     /// @brief Base PositionTracking class used for pointers and references
@@ -36,9 +36,9 @@ namespace neblib
     class Odometry : public PositionTracking
     {
     protected:
-        neblib::TrackerWheel& parallel;
-        neblib::TrackerWheel& perpendicular;
-        vex::inertial& imu;
+        neblib::TrackerWheel &parallel;
+        neblib::TrackerWheel &perpendicular;
+        vex::inertial &imu;
 
         double parallelOffset;
         double perpendicularOffset;
@@ -52,6 +52,7 @@ namespace neblib
         /// @brief Gets the global change in position
         /// @return neblib::Pose containing change in x, y, and heading
         neblib::Pose getGlobalChange();
+
     public:
         /// @brief Creates an Odometry object
         /// @param parallelWheel any neblib::TrackerWheel representing the wheel parallel with forwards movement
@@ -59,7 +60,7 @@ namespace neblib
         /// @param perpendicularWheel any neblib::TrackerWheel representing the wheel perpendicular to forwards movement
         /// @param perpendicularOffset the offset from the turning center of the robot to the perpendicular wheel, in the same units as the wheel's diameter
         /// @param imu a vex::inertial object
-        Odometry(neblib::TrackerWheel& parallelWheel, double parallelOffset, neblib::TrackerWheel& perpendicularWheel, double perpendicularOffset, vex::inertial& imu);
+        Odometry(neblib::TrackerWheel &parallelWheel, double parallelOffset, neblib::TrackerWheel &perpendicularWheel, double perpendicularOffset, vex::inertial &imu);
 
         /// @brief Updates the internally stored pose and returns updated value
         /// @return updated neblib::Pose holding x, y, and heading

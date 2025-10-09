@@ -26,6 +26,15 @@ float neblib::toDeg(float rad)
   return rad * 180 / 3.1415926535;
 }
 
+double neblib::clamp(double num, double min, double max)
+{
+  if (num < min)
+    return min;
+  if (num > max)
+    return max;
+  return num;
+}
+
 float neblib::wrap(float num, float min, float max)
 {
   while (num < min)

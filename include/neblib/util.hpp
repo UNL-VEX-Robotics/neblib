@@ -25,6 +25,8 @@ namespace neblib
     /// @return degrees, float
     float toDeg(float rad);
 
+    double clamp(double num, double min, double max);
+
     /// @brief Wraps a number within a range, keeping the local value
     /// @param num a number
     /// @param min the minimum acceptable value
