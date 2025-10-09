@@ -44,8 +44,12 @@ neblib::PID::PID(double kP, double kI, double kD, double windupRange, std::share
 
 double neblib::PID::getOutput(double error, double minOutput, double maxOutput)
 {
-    if (fabs(error) <= gains.windupRange) integral += error;
-    else if (gains.resetWindupOnSignChange) integral = 0;
+    if (fabs(error) <= gains.windupRange)
+        integral += error;
+    else
+        integral = 0;
+    if (sign(error) != sign(previousError) && hasPreviousError && gains.resetWindupOnSignChange)
+        integral = 0;
 
     double derivative = hasPreviousError ? error - previousError : 0;
     previousError = error;
