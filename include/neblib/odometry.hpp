@@ -1,4 +1,5 @@
 #pragma once
+#include "vex.h"
 #include "neblib/tracker_wheel.hpp"
 #include "neblib/util.hpp"
 
@@ -8,63 +9,75 @@ namespace neblib
     /// @brief Struct for holding pose of a robot (x, y, heading)
     struct Pose
     {
-        float x;
-        float y;
-        float heading;
+        double x;
+        double y;
+        double heading;
 
         /// @brief Constructs a Pose object
         /// @param x x position of a robot
         /// @param y y position of a robot
         /// @param heading heading of a robot
-        Pose(float x, float y, float heading);
+        Pose(double x, double y, double heading);
+
+        Pose& operator+=(const Pose& other);
     };
 
-    /// @brief Class to track a robot's pose based on E-Pilon documentation http://thepilons.ca/wp-content/uploads/2018/10/Tracking.pdf
-    class Odometry
+    /// @brief Base PositionTracking class used for pointers and references
+    class PositionTracking
     {
-    private:
-        neblib::TrackerWheel *parallel;
-        float parallelOffset;
-        neblib::TrackerWheel *perpendicular;
-        float perpendicularOffset;
-
-        vex::inertial *imu;
-        float previousRotation;
-
-        neblib::Pose pose;
-
-        float previousParallel = 0.0;
-        float previousPerpendicular = 0.0;
-
     public:
-        /// @brief Creates an odometry object
-        /// @param parallel pointer to the parallel tracker wheel object
-        /// @param parallelOffset parallel tracker wheel offset from center, right is positive
-        /// @param perpendicular pointer to the perpendicular tracker wheel object
-        /// @param perpendicularOffset perpendicular tracker wheel offset from center, back is positive
-        /// @param imu pointer to a vex inertial object
-        Odometry(neblib::TrackerWheel *parallel, float parallelOffset, neblib::TrackerWheel *perpendicular, float perpendicularOffset, vex::inertial *imu);
+        // Pure virtual methods that need implemented.
+        virtual ~PositionTracking() = default;
+        virtual neblib::Pose getPose() = 0;
+        virtual void setPose(double x, double y, double heading) = 0;
+    };
 
-        /// @brief Sets the pose of a robot
-        /// @param x the robot's x position
-        /// @param y the robot's y position
-        /// @param heading the robot's heading, in deg
-        void setPose(float x, float y, float heading);
+    /// @brief Odometry class based on 5225 E-Pilons document: http://thepilons.ca/wp-content/uploads/2018/10/Tracking.pdf
+    class Odometry : public PositionTracking
+    {
+    protected:
+        neblib::TrackerWheel& parallel;
+        neblib::TrackerWheel& perpendicular;
+        vex::inertial& imu;
 
-        /// @brief Calibrates the inertial sensor
-        void calibrate(float timeout = infinityf());
+        double parallelOffset;
+        double perpendicularOffset;
+
+        neblib::Pose currentPose;
+
+        double previousRotation;
+        double previousParallel;
+        double previousPerpendicular;
 
         /// @brief Gets the global change in position
-        /// @return a Pose object containing change in x, y, and heading
-        Pose getGlobalChange();
+        /// @return neblib::Pose containing change in x, y, and heading
+        neblib::Pose getGlobalChange();
+    public:
+        /// @brief Creates an Odometry object
+        /// @param parallelWheel any neblib::TrackerWheel representing the wheel parallel with forwards movement
+        /// @param parallelOffset the offset from the turning center of the robot to the parallel wheel, in the same units as the wheel's diameter
+        /// @param perpendicularWheel any neblib::TrackerWheel representing the wheel perpendicular to forwards movement
+        /// @param perpendicularOffset the offset from the turning center of the robot to the perpendicular wheel, in the same units as the wheel's diameter
+        /// @param imu a vex::inertial object
+        Odometry(neblib::TrackerWheel& parallelWheel, double parallelOffset, neblib::TrackerWheel& perpendicularWheel, double perpendicularOffset, vex::inertial& imu);
 
-        /// @brief Gets the current pose of the robot
-        /// @return a Pose object containing the robot's x, y, and heading
-        Pose getPose();
+        /// @brief Updates the internally stored pose and returns updated value
+        /// @return updated neblib::Pose holding x, y, and heading
+        neblib::Pose updatePose();
 
-        /// @brief Updates the robot's pose
-        /// @return a Pose object containing the robot's updated x, y, and heading
-        Pose updatePose();
+        /// @brief Gets the internally stored pose
+        /// @return neblib::Pose holding x, y, and heading
+        neblib::Pose getPose() override;
+
+        /// @brief Sets the robot's pose to a desired pose
+        /// @param x desired x position
+        /// @param y desired y position
+        /// @param heading desired heading value in degrees
+        void setPose(double x, double y, double heading) override;
+
+        /// @brief Calibrates the imu
+        /// @param timeout a timeout before the calibration stops if not complete
+        void calibrate(double timeout = infinity());
     };
 
 }

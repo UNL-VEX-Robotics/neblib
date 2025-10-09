@@ -2,75 +2,79 @@
 
 #include <iostream>
 
-neblib::Pose::Pose(float x, float y, float heading) : x(x), y(y), heading(heading) {}
+neblib::Pose::Pose(double x, double y, double heading) : x(x), y(y), heading(heading) {}
 
-neblib::Odometry::Odometry(neblib::TrackerWheel *parallel, float parallelOffset, neblib::TrackerWheel *perpendicular, float perpendicularOffset, vex::inertial *imu) : parallel(parallel), parallelOffset(parallelOffset), perpendicular(perpendicular), perpendicularOffset(perpendicularOffset), imu(imu), previousRotation(0), pose(Pose(0, 0, 0)) {}
-
-void neblib::Odometry::setPose(float x, float y, float heading)
+neblib::Pose &neblib::Pose::operator+=(const neblib::Pose &other)
 {
-    pose = Pose(x, y, heading);
-    previousRotation = heading;
-    imu->setHeading(heading, vex::rotationUnits::deg);
-    imu->setRotation(heading, vex::rotationUnits::deg);
+    x += other.x;
+    y += other.y;
+    heading = neblib::wrap(heading + other.heading, 0, 360);
+    return *this;
 }
 
-void neblib::Odometry::calibrate(float timeout)
+neblib::Odometry::Odometry(neblib::TrackerWheel &parallelWheel, double parallelOffset, neblib::TrackerWheel &perpendicularWheel, double perpendicularOffset, vex::inertial &imu) : parallel(parallelWheel), perpendicular(perpendicularWheel), imu(imu), parallelOffset(parallelOffset), perpendicularOffset(perpendicularOffset), currentPose(0.0, 0.0, 0.0), previousRotation(0.0), previousParallel(0.0), previousPerpendicular(0.0)
 {
-    float t = 0;
-    imu->calibrate();
-    do
-    {
-        vex::task::sleep(10);
-        t += 0.01;
-    } while (imu->isCalibrating() && t < timeout);
-    
-    previousRotation = pose.heading;
-    imu->setHeading(pose.heading, vex::rotationUnits::deg);
-    imu->setRotation(pose.heading, vex::rotationUnits::deg);
-}
-
-neblib::Pose neblib::Odometry::updatePose()
-{
-    Pose globalChange = this->getGlobalChange();
-    pose.x += globalChange.x;
-    pose.y += globalChange.y;
-    pose.heading = imu->heading(vex::rotationUnits::deg);
-
-    return pose;
 }
 
 neblib::Pose neblib::Odometry::getGlobalChange()
 {
-    float parallelPosition = parallel->getPosition();
-    float perpendicularPosition = perpendicular->getPosition();
+    double parallelPosition = parallel.getPosition();
+    double perpendicularPosition = perpendicular.getPosition();
 
-    float changeInParallel = parallelPosition - previousParallel;
+    double changeInParallel = parallelPosition - previousParallel;
     previousParallel = parallelPosition;
-    float changeInPerpendicular = perpendicularPosition - previousPerpendicular;
+    double changeInPerpendicular = perpendicularPosition - previousPerpendicular;
     previousPerpendicular = perpendicularPosition;
 
-    float currentRotation = imu->rotation(vex::rotationUnits::deg);
-    float changeInRotation = neblib::toRad(currentRotation - previousRotation);
+    double currentRotation = imu.rotation(vex::rotationUnits::deg);
+    double changeInRotation = neblib::toRad(currentRotation - previousRotation);
 
-    Pose localPose = Pose(0, 0, 0);
-    if (changeInRotation == 0.0)
+    Pose localPose = Pose(0.0, 0.0, 0.0);
+    if (changeInRotation == 1e-6)
     {
         localPose.x = changeInPerpendicular;
         localPose.y = changeInParallel;
     }
     else
     {
-        localPose.x = 2.0 * sinf(changeInRotation / 2.0) * (changeInPerpendicular / changeInRotation + perpendicularOffset);
-        localPose.y = 2.0 * sinf(changeInRotation / 2.0) * (changeInParallel / changeInRotation + parallelOffset);
+        localPose.x = 2.0 * sin(changeInRotation / 2.0) * (changeInPerpendicular / changeInRotation + perpendicularOffset);
+        localPose.y = 2.0 * sin(changeInRotation / 2.0) * (changeInParallel / changeInRotation + parallelOffset);
     }
 
-    float averageRotation = neblib::toRad(previousRotation) + changeInRotation / 2.0;
+    double averageRotation = neblib::toRad(previousRotation) + (changeInRotation / 2.0);
     previousRotation = currentRotation;
 
-    float polarRadius = sqrtf(powf(localPose.x, 2.0) + powf(localPose.y, 2.0));
-    float polarAngle = atan2f(localPose.y, localPose.x) - averageRotation;
+    double polarRadius = hypot(localPose.x, localPose.y);
+    double polarAngle = atan2(localPose.y, localPose.x) - averageRotation;
 
-    return Pose(polarRadius * cosf(polarAngle), polarRadius * sinf(polarAngle), neblib::toDeg(changeInRotation));
+    return Pose(polarRadius * cos(polarAngle), polarRadius*sin(polarAngle), neblib::toDeg(changeInRotation));
 }
 
-neblib::Pose neblib::Odometry::getPose() { return pose; }
+neblib::Pose neblib::Odometry::updatePose()
+{
+    currentPose += this->getGlobalChange();
+    currentPose.heading = imu.heading(vex::rotationUnits::deg);
+    return currentPose;
+}
+
+neblib::Pose neblib::Odometry::getPose()
+{
+    return currentPose;
+}
+
+void neblib::Odometry::setPose(double x, double y, double heading)
+{
+    currentPose = Pose(x, y, heading);
+    imu.setHeading(heading, vex::rotationUnits::deg);
+}
+
+void neblib::Odometry::calibrate(double timeout)
+{
+    imu.calibrate();
+    for (int mS = 0; mS < 1000 * timeout; mS += 10)
+    {
+        vex::task::sleep(10);
+        if (imu.isCalibrating())
+            break;
+    }
+}

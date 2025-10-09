@@ -17,7 +17,7 @@ namespace neblib
     };
 
     /// @brief TrackerWheel class with a vex v5 rotation sensor
-    class RotationTrackerWheel : TrackerWheel
+    class RotationTrackerWheel : public TrackerWheel
     {
     private:
         vex::rotation &rotation;
@@ -43,7 +43,7 @@ namespace neblib
     };
 
     /// @brief TrackerWheel class with a vex optical shaft encoder
-    class EncoderTrackerWheel : TrackerWheel
+    class EncoderTrackerWheel : public TrackerWheel
     {
     private:
         vex::encoder &encoder;
