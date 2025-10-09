@@ -5,33 +5,53 @@
 
 namespace neblib
 {
-    /// @brief Creates a vex::task and allows parameters to be passed
-    /// @bug couldn't do vex::task task = neblib::launchTask(std::bind(&class::func, this))
     template <class F>
-    vex::task launchTask(F &&function);
+    vex::task launchTask(F &&function)
+    {
+        // static_assert(std::is_invocable_r_v<void, F>);
+        return vex::task([](void *parameters)
+                         {
+    std::unique_ptr<std::function<void()>> ptr{static_cast<std::function<void()>*>(parameters)};
+    (*ptr)();
+    return 0; }, new std::function<void()>(std::forward<F>(function)));
+    }
 
-    /// @brief Gets the sign of a number
-    /// @param num a number
-    /// @return 1 if positive, -1 if negative, 0 if 0
-    int sign(double num);
+    template <typename T>
+    int sign(T num)
+    {
+        if (num < 0)
+            return -1;
+        if (num > 0)
+            return 1;
+        return 0;
+    }
 
-    /// @brief Converts degrees to radians
-    /// @param deg degrees
-    /// @return radians, float
-    float toRad(float deg);
+    double toRad(double degrees)
+    {
+        return M_PI * degrees / 180.0;
+    }
 
-    /// @brief Converts radians to degrees
-    /// @param rad radians
-    /// @return degrees, float
-    float toDeg(float rad);
+    double toDeg(double radians)
+    {
+        return radians * 180.0 / M_PI;
+    }
 
-    double clamp(double num, double min, double max);
+    double clamp(double num, double min, double max)
+    {
+        if (num < min)
+            return min;
+        if (num > max)
+            return max;
+        return num;
+    }
 
-    /// @brief Wraps a number within a range, keeping the local value
-    /// @param num a number
-    /// @param min the minimum acceptable value
-    /// @param max the maximum acceptable value
-    /// @return the wrapped number, float
-    float wrap(float num, float min, float max);
+    double wrap(double num, double min, double max)
+    {
+        while (num < min)
+            num += (max - min);
+        while (num > max)
+            num -= (max - min);
+        return num;
+    }
 
 }
