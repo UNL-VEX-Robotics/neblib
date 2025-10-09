@@ -42,6 +42,8 @@ namespace neblib
         /// @brief Gets the current position of the tracker wheel
         /// @return float with the position of the tracker wheel, in the same units as the wheel diameter
         float getPosition();
+
+        void resetPosition();
     };
 
 }

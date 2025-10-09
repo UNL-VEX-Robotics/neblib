@@ -30,7 +30,7 @@ float neblib::wrap(float num, float min, float max)
 {
   while (num < min)
     num += (max - min);
-  while (num < max)
+  while (num > max)
     num -= (max - min);
   return num;
 }

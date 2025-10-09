@@ -52,7 +52,7 @@ namespace neblib
         void setPose(float x, float y, float heading);
 
         /// @brief Calibrates the inertial sensor
-        void calibrate();
+        void calibrate(float timeout = infinityf());
 
         /// @brief Gets the global change in position
         /// @return a Pose object containing change in x, y, and heading

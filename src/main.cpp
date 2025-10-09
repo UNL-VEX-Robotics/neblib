@@ -9,6 +9,7 @@
 
 #include "vex.h"
 #include "neblib/xdrive.hpp"
+#include <iostream>
 
 using namespace vex;
 
@@ -36,11 +37,12 @@ inertial imu(PORT16);
 
 neblib::TrackerWheel parallel(rotation(PORT11), 2.0);
 neblib::TrackerWheel perpendicular(rotation(PORT1), 2.0);
-neblib::Odometry odometry(&parallel, 0.0, &perpendicular, 0.0, &imu);
+neblib::Odometry odometry(&parallel, -3.5, &perpendicular, -1.1, &imu);
 
 neblib::XDrive xDrive(leftFront, rightFront, leftBack, rightBack, &odometry, &imu);
 
 neblib::PID rotationalPID(neblib::PID::Gains(0.135, 0.02, 0.25, 10.0), neblib::PID::SettleTimeExitConditions(0.25, 50, 10));
+neblib::PID linearPID(neblib::PID::Gains(0.3, 0.001, 0.5, 12.0, true), neblib::PID::SettleTimeExitConditions(0.25, 30, 10));
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -58,14 +60,14 @@ void pre_auton(void) {
   // Example: clearing encoders, setting servo positions, ...
 }
 
-// int task_a_odometry()
-// {
-//   while(true)
-//   {
-//     odometry.updatePose();
-//     task::sleep(10);
-//   }
-// }
+int task_a_odometry()
+{
+  while(true)
+  {
+    odometry.updatePose();
+    task::sleep(10);
+  }
+}
 
 void autonomous(void) {
   // ..........................................................................
@@ -83,24 +85,51 @@ void autonomous(void) {
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
+int task_u_controllerPrint()
+{
+  while (true)
+  {
+    controller1.Screen.clearScreen();
+
+    neblib::Pose pose = odometry.getPose();
+    controller1.Screen.setCursor(1, 1);
+    controller1.Screen.print("Position: ");
+    controller1.Screen.setCursor(2, 1);
+    controller1.Screen.print("(");
+    controller1.Screen.print(pose.x);
+    controller1.Screen.print(", ");
+    controller1.Screen.print(pose.y);
+    controller1.Screen.print(", ");
+    controller1.Screen.print(pose.heading);
+    controller1.Screen.print(")");
+
+    controller1.Screen.setCursor(3, 1);
+    controller1.Screen.print(parallel.getPosition() / neblib::toRad(imu.rotation() - 90));
+
+    task::sleep(10);
+  }
+}
+
 void usercontrol(void) {
   xDrive.setRotationalPID(&rotationalPID);
+  xDrive.setLinearPID(&linearPID);
   Brain.Screen.clearScreen();
   Brain.Screen.setCursor(1, 1);
   Brain.Screen.print("Calibrating... ");
-
-  odometry.calibrate();
-  imu.setHeading(90, deg);
-
-  Brain.Screen.clearScreen();
-  Brain.Screen.setCursor(1, 1);
-  Brain.Screen.print(cosf(M_PI));
-
-  float t = xDrive.turnFor(90, 5);
-  controller1.Screen.print(imu.heading(deg));
-  controller1.Screen.print(" ");
-  controller1.Screen.print(t);
-  controller1.rumble(".");
+  
+  
+  odometry.calibrate(5);
+  odometry.setPose(0, 0, 90);
+  
+  task a = task(task_a_odometry);
+  
+  // xDrive.driveToPose(24, 24, 90, 2);
+  // xDrive.driveToPose(24, 72, 90, 2);
+  // xDrive.driveToPose(0, 96, 90, 2);
+  // xDrive.driveToPose(-24, 72, 90, 2);
+  // xDrive.driveToPose(-24, 24, 90, 2);
+  // xDrive.driveToPose(0, 0, 90, 2);
+  
 
   while (true)
   {

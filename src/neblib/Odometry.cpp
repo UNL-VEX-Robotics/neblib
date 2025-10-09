@@ -14,13 +14,16 @@ void neblib::Odometry::setPose(float x, float y, float heading)
     imu->setRotation(heading, vex::rotationUnits::deg);
 }
 
-void neblib::Odometry::calibrate()
+void neblib::Odometry::calibrate(float timeout)
 {
+    float t = 0;
     imu->calibrate();
     do
     {
         vex::task::sleep(10);
-    } while (imu->isCalibrating());
+        t += 0.01;
+    } while (imu->isCalibrating() && t < timeout);
+    
     previousRotation = pose.heading;
     imu->setHeading(pose.heading, vex::rotationUnits::deg);
     imu->setRotation(pose.heading, vex::rotationUnits::deg);
