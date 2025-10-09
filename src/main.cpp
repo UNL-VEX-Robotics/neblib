@@ -8,7 +8,8 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
-#include "neblib/odometry.hpp"
+#include "neblib/xdrive.hpp"
+#include <iostream>
 
 using namespace vex;
 
@@ -17,13 +18,31 @@ competition Competition;
 
 // define your global instances of motors and other devices here
 brain Brain;
+controller controller1(primary);
 
-vex::inertial imu(PORT20);
+motor leftFrontTop(PORT12, ratio6_1, false);
+motor leftFrontBottom(PORT13, ratio6_1, true);
+vex::motor_group leftFront(leftFrontTop, leftFrontBottom);
+motor rightFrontTop(PORT3, ratio6_1, true);
+motor rightFrontBottom(PORT2, ratio6_1, false);
+vex::motor_group rightFront(rightFrontTop, rightFrontBottom);
+motor leftBackTop(PORT14, ratio6_1, false);
+motor leftBackBottom(PORT15, ratio6_1, true);
+vex::motor_group leftBack(leftBackTop, leftBackBottom);
+motor rightBackTop(PORT5, ratio6_1, true);
+motor rightBackBottom(PORT4, ratio6_1, false);
+vex::motor_group rightBack(rightBackTop, rightBackBottom);
 
-neblib::TrackerWheel parallel(vex::rotation(PORT11), 2.0);
-neblib::TrackerWheel perpendicular(vex::rotation(PORT10), 2.0);
+inertial imu(PORT16);
 
-neblib::Odometry odometry(&parallel, 1.625, &perpendicular, 0.75, &imu);
+neblib::TrackerWheel parallel(rotation(PORT11), 2.0);
+neblib::TrackerWheel perpendicular(rotation(PORT1), 2.0);
+neblib::Odometry odometry(&parallel, -3.5, &perpendicular, -1.1, &imu);
+
+neblib::XDrive xDrive(leftFront, rightFront, leftBack, rightBack, &odometry, &imu);
+
+neblib::PID rotationalPID(neblib::PID::Gains(0.135, 0.02, 0.25, 10.0), neblib::PID::SettleTimeExitConditions(0.25, 50, 10));
+neblib::PID linearPID(neblib::PID::Gains(0.3, 0.001, 0.5, 12.0, true), neblib::PID::SettleTimeExitConditions(0.25, 30, 10));
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -41,15 +60,14 @@ void pre_auton(void) {
   // Example: clearing encoders, setting servo positions, ...
 }
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
+int task_a_odometry()
+{
+  while(true)
+  {
+    odometry.updatePose();
+    task::sleep(10);
+  }
+}
 
 void autonomous(void) {
   // ..........................................................................
@@ -67,44 +85,56 @@ void autonomous(void) {
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
+int task_u_controllerPrint()
+{
+  while (true)
+  {
+    controller1.Screen.clearScreen();
+
+    neblib::Pose pose = odometry.getPose();
+    controller1.Screen.setCursor(1, 1);
+    controller1.Screen.print("Position: ");
+    controller1.Screen.setCursor(2, 1);
+    controller1.Screen.print("(");
+    controller1.Screen.print(pose.x);
+    controller1.Screen.print(", ");
+    controller1.Screen.print(pose.y);
+    controller1.Screen.print(", ");
+    controller1.Screen.print(pose.heading);
+    controller1.Screen.print(")");
+
+    controller1.Screen.setCursor(3, 1);
+    controller1.Screen.print(parallel.getPosition() / neblib::toRad(imu.rotation() - 90));
+
+    task::sleep(10);
+  }
+}
+
 void usercontrol(void) {
+  xDrive.setRotationalPID(&rotationalPID);
+  xDrive.setLinearPID(&linearPID);
   Brain.Screen.clearScreen();
   Brain.Screen.setCursor(1, 1);
   Brain.Screen.print("Calibrating... ");
+  
+  
+  odometry.calibrate(5);
+  odometry.setPose(0, 0, 90);
+  
+  task a = task(task_a_odometry);
+  
+  // xDrive.driveToPose(24, 24, 90, 2);
+  // xDrive.driveToPose(24, 72, 90, 2);
+  // xDrive.driveToPose(0, 96, 90, 2);
+  // xDrive.driveToPose(-24, 72, 90, 2);
+  // xDrive.driveToPose(-24, 24, 90, 2);
+  // xDrive.driveToPose(0, 0, 90, 2);
+  
 
-  odometry.calibrate();
-  odometry.setPose(0, 0, 0);
-
-  while (1) {
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Parallel: ");
-    Brain.Screen.print(parallel.getPosition());
-
-    Brain.Screen.setCursor(2, 1);
-    Brain.Screen.print("Perpendicular: ");
-    Brain.Screen.print(perpendicular.getPosition());
-
-    neblib::Pose pose = odometry.updatePose();
-
-    Brain.Screen.setCursor(3, 1);
-    Brain.Screen.print("X: ");
-    Brain.Screen.print(pose.x);
-
-    Brain.Screen.setCursor(4, 1);
-    Brain.Screen.print("Y: ");
-    Brain.Screen.print(pose.y);
-
-    Brain.Screen.setCursor(5, 1);
-    Brain.Screen.print("H: ");
-    Brain.Screen.print(pose.heading);
-
-    Brain.Screen.setCursor(6, 1);
-    Brain.Screen.print("H2: ");
-    Brain.Screen.print(imu.heading(deg));
-
-    wait(20, msec); // Sleep the task for a short amount of time to
-                    // prevent wasted resources.
+  while (true)
+  {
+    xDrive.driveGlobal(controller1.Axis3.position(percent) * 0.12, controller1.Axis4.position(percent) * 0.12, controller1.Axis1.position(percent) * 0.12, vex::voltageUnits::volt);
+    task::sleep(10);
   }
 }
 

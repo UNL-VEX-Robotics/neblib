@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-neblib::Pose::Pose(float x, float y, float heading): x(x), y(y), heading(heading) {}
+neblib::Pose::Pose(float x, float y, float heading) : x(x), y(y), heading(heading) {}
 
-neblib::Odometry::Odometry(neblib::TrackerWheel* parallel, float parallelOffset, neblib::TrackerWheel* perpendicular, float perpendicularOffset, vex::inertial* imu): parallel(parallel), parallelOffset(parallelOffset), perpendicular(perpendicular), perpendicularOffset(perpendicularOffset), imu(imu), previousRotation(0), pose(Pose(0, 0, 0)) {}
+neblib::Odometry::Odometry(neblib::TrackerWheel *parallel, float parallelOffset, neblib::TrackerWheel *perpendicular, float perpendicularOffset, vex::inertial *imu) : parallel(parallel), parallelOffset(parallelOffset), perpendicular(perpendicular), perpendicularOffset(perpendicularOffset), imu(imu), previousRotation(0), pose(Pose(0, 0, 0)) {}
 
 void neblib::Odometry::setPose(float x, float y, float heading)
 {
@@ -14,13 +14,16 @@ void neblib::Odometry::setPose(float x, float y, float heading)
     imu->setRotation(heading, vex::rotationUnits::deg);
 }
 
-void neblib::Odometry::calibrate()
+void neblib::Odometry::calibrate(float timeout)
 {
+    float t = 0;
     imu->calibrate();
-    do 
+    do
     {
         vex::task::sleep(10);
-    } while (imu->isCalibrating());
+        t += 0.01;
+    } while (imu->isCalibrating() && t < timeout);
+    
     previousRotation = pose.heading;
     imu->setHeading(pose.heading, vex::rotationUnits::deg);
     imu->setRotation(pose.heading, vex::rotationUnits::deg);
@@ -54,7 +57,9 @@ neblib::Pose neblib::Odometry::getGlobalChange()
     {
         localPose.x = changeInPerpendicular;
         localPose.y = changeInParallel;
-    } else {
+    }
+    else
+    {
         localPose.x = 2.0 * sinf(changeInRotation / 2.0) * (changeInPerpendicular / changeInRotation + perpendicularOffset);
         localPose.y = 2.0 * sinf(changeInRotation / 2.0) * (changeInParallel / changeInRotation + parallelOffset);
     }

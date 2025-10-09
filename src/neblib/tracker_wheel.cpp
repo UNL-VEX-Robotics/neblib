@@ -33,3 +33,17 @@ float neblib::TrackerWheel::getPosition()
     }
     return currentPosition;
 }
+
+void neblib::TrackerWheel::resetPosition()
+{
+    switch (deviceType)
+    {
+    case ROTATION:
+        rotation.resetPosition();
+        break;
+    
+    case OS_ENCODER:
+        encoder.resetRotation();
+        break;
+    }
+}
