@@ -37,45 +37,25 @@ namespace neblib
     /// @brief Converts degrees to radians
     /// @param degrees degrees
     /// @return radians
-    double toRad(double degrees)
-    {
-        return M_PI * degrees / 180.0;
-    }
+    double toRad(double degrees);
 
     /// @brief Converts radians to degrees
     /// @param radians radians
     /// @return degrees
-    double toDeg(double radians)
-    {
-        return radians * 180.0 / M_PI;
-    }
+    double toDeg(double radians);
 
     /// @brief Hard clamps a number to a range
     /// @param num number
     /// @param min minimum acceptable value
     /// @param max maximum acceptable value
     /// @return a number between min and max
-    double clamp(double num, double min, double max)
-    {
-        if (num < min)
-            return min;
-        if (num > max)
-            return max;
-        return num;
-    }
+    double clamp(double num, double min, double max);
 
     /// @brief Keeps a number within a range keeping its local value
     /// @param num number
     /// @param min minimum acceptable value
     /// @param max maximum acceptable value
     /// @return number
-    double wrap(double num, double min, double max)
-    {
-        while (num < min)
-            num += (max - min);
-        while (num > max)
-            num -= (max - min);
-        return num;
-    }
+    double wrap(double num, double min, double max);
 
 }
