@@ -1,8 +1,5 @@
 #pragma once
-#include <functional>
-#include <vector>
 #include "vex.h"
-#include "neblib/tracker_wheel.hpp"
 #include "neblib/odometry.hpp"
 #include "neblib/pid.hpp"
 
@@ -11,121 +8,146 @@ namespace neblib
     class XDrive
     {
     private:
-        vex::motor_group leftFront;
-        vex::motor_group rightFront;
-        vex::motor_group leftBack;
-        vex::motor_group rightBack;
+        vex::motor_group frontLeft;
+        vex::motor_group frontRight;
+        vex::motor_group backLeft;
+        vex::motor_group backRight;
 
-        vex::inertial *imu;
-        neblib::Odometry *odometry;
+        std::unique_ptr<PositionTracking> positionTracking;
 
-        neblib::PID *linearPID;
-        neblib::PID *rotationalPID;
+        vex::inertial &imu;
+
+        PID *turnPID;
+        PID *linearPID;
+        PID *rotationalPID;
 
     public:
-        /// @brief Constructs an XDrive object using vex motor groups
-        /// @param leftFront motor group containing the left front motors
-        /// @param rightFront motor group containing the right front motors
-        /// @param leftBack motor group containing the left rear motors
-        /// @param rightBack motor group containing the right rear motors
-        /// @param odometry pointer to an odometry object
-        /// @param imu pointer to a vex inertial object
-        XDrive(vex::motor_group leftFront, vex::motor_group rightFront, vex::motor_group leftBack, vex::motor_group rightBack, neblib::Odometry *odometry, vex::inertial *imu);
+        /// @brief Constructs an XDrive object
+        /// @param frontLeft front left motor group
+        /// @param frontRight front right motor group
+        /// @param backLeft back left motor group
+        /// @param backRight back right motor group
+        /// @param positionTracking std::unique_ptr for position tracking
+        XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, std::unique_ptr<PositionTracking> positionTracking, vex::inertial &imu);
 
-        /// @brief Constructs an XDrive object using vex motors
-        /// @param leftFront  left front motor
-        /// @param rightFront right front motor
-        /// @param leftBack left back motor
-        /// @param rightBack right back motor
-        /// @param odometry pointer to an odometry object
-        /// @param imu pointer to a vex inertial object
-        XDrive(vex::motor &leftFront, vex::motor &rightFront, vex::motor &leftBack, vex::motor &rightBack, neblib::Odometry *odometry, vex::inertial *imu);
+        /// @brief Sets the PID used for turn-in-place movements
+        /// @param pid reference to a PID object
+        void setTurnPID(PID &pid);
 
-        /// @brief Sets the driving PID used in autonomous
-        /// @param pid pointer to a PID object
-        void setLinearPID(neblib::PID *pid);
+        /// @brief Sets the PID used for the driving for move-to movements
+        /// @param pid reference to a PID object
+        void setLinearPID(PID &pid);
 
-        /// @brief Sets the turning PID used in autonomous
-        /// @param pid pointer to a PID object
-        void setRotationalPID(neblib::PID *pid);
+        /// @brief Sets the PID used for the turning for move-to movements
+        /// @param pid reference to a PID object
+        void setRotationalPID(PID &pid);
 
-        /// @brief Drives the robot in a local frame
-        /// @param drive forward and backward drive component
-        /// @param strafe side to side drive component
+        /// @brief Robot-centric driving
+        /// @param drive forward-backward component
+        /// @param strafe side to side component
         /// @param turn turning component
-        /// @param unit velocity unit
-        void driveLocal(float drive, float strafe, float turn, vex::velocityUnits unit = vex::velocityUnits::pct);
+        /// @param units velocity units
+        void driveLocal(double drive, double strafe, double turn, vex::velocityUnits units = vex::velocityUnits::pct);
 
-        /// @brief Drives the robot in a local frame
-        /// @param drive forward and backward drive component
-        /// @param strafe side to side drive component
+        /// @brief Robot-centric driving
+        /// @param drive forward-backward component
+        /// @param strafe side to side component
         /// @param turn turning component
-        /// @param unit voltage unit
-        void driveLocal(float drive, float strafe, float turn, vex::voltageUnits unit);
+        /// @param units velocity units
+        void driveLocal(double drive, double strafe, double turn, vex::voltageUnits units);
 
-        /// @brief Drives the robot using a target angle and velocity
+        /// @brief Drives the robot at an angle relative to the robot
         /// @param velocity desired velocity
-        /// @param deg desired angle
+        /// @param angle angle (robot-centered) to drive at
         /// @param turn turning component
-        /// @param unit velocity unit
-        void drvieAngle(float velocity, float deg, float turn, vex::velocityUnits unit = vex::velocityUnits::pct);
+        /// @param units velocity units
+        void driveAngle(double velocity, double angle, double turn, vex::velocityUnits units = vex::velocityUnits::pct);
 
-        /// @brief Drives the robot using a target angle and velocity
+        /// @brief Drives the robot at an angle relative to the robot
         /// @param velocity desired velocity
-        /// @param deg desired angle
+        /// @param angle angle (robot-centered) to drive at
         /// @param turn turning component
-        /// @param unit voltage unit
-        void driveAngle(float velocity, float deg, float turn, vex::voltageUnits unit);
+        /// @param units velocity units
+        void driveAngle(double velocity, double angle, double turn, vex::voltageUnits units);
 
-        /// @brief Drives the robot in the global frame
+        /// @brief Field-centric driving
         /// @param x x component
         /// @param y y component
-        /// @param turn turn component
-        /// @param unit velocity unit
-        void driveGlobal(float x, float y, float turn, vex::velocityUnits unit = vex::velocityUnits::pct);
+        /// @param turn turning component
+        /// @param units velocity units
+        void driveGlobal(double x, double y, double turn, vex::velocityUnits units = vex::velocityUnits::pct);
 
-        /// @brief Drives the robot in the global frame
+        /// @brief Field-centric driving
         /// @param x x component
         /// @param y y component
-        /// @param turn turn component
-        /// @param unit voltage unit
-        void driveGlobal(float x, float y, float turn, vex::voltageUnits unit);
+        /// @param turn turning component
+        /// @param units velocity units
+        void driveGlobal(double x, double y, double turn, vex::voltageUnits units);
 
-        /// @brief Stops the drivetrain with the desired stop type
-        /// @param stopType vex::brakeType to be used, hold by default
+        /// @brief Stops the motors
+        /// @param stopType stop type
         void stop(vex::brakeType stopType = vex::brakeType::hold);
 
-        /// @brief Turns the robot for a set number of degrees
-        /// @param deg desired degrees
-        /// @param minOutput minimum PID output
-        /// @param maxOutput maximum PID output
-        /// @param timeout time before PID stops attempting to run if not settled, seconds
-        /// @return time it took the function to run, in seconds
-        float turnFor(float deg, float minOutput, float maxOutput, float timeout = infinityf());
+        /// @brief Turns for a desired number of degrees
+        /// @param degrees desired degrees
+        /// @param minOutput minimum speed
+        /// @param maxOutput maximum speed
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double turnFor(double degrees, double minOutput, double maxOutput, double timeout = infinity());
 
-        /// @brief Turns the robot for a set number of degrees
-        /// @param deg desired degrees
-        /// @param timeout time before PID stops attempting to run if not settled, seconds
-        /// @return time it took the function to run, in seconds
-        float turnFor(float deg, float timeout = infinityf());
+        /// @brief Turns for a desired number of degrees
+        /// @param degrees desired degrees
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double turnFor(double degrees, double timeout = infinity());
 
-        /// @brief Turns the robot to a set heading
+        /// @brief Turns to a desired heading
         /// @param heading desired heading
-        /// @param minOutput minimum PID output
-        /// @param maxOutput maximum PID output
-        /// @param timeout time before PID stops attempting to run if not settled, seconds
-        /// @return time it took the function to run, in seconds
-        float turnTo(float heading, float minOutput, float maxOutput, float timeout = infinityf());
+        /// @param minOutput minimum speed
+        /// @param maxOutput maximum speed
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double turnTo(double heading, double minOutput, double maxOutput, double timeout = infinity());
 
-        /// @brief Turns the robot to a set heading
+        /// @brief Turns to a desired heading
         /// @param heading desired heading
-        /// @param timeout time before PID stops attempting to run if not settled, seconds
-        /// @return time it took the function to run, in seconds
-        float turnTo(float deg, float timeout = infinityf());
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double turnTo(double heading, double timeout = infinity());
 
-        float driveTo(float x, float y, float minOutput, float maxOutput, float timeout = infinityf());
-        float driveTo(float x, float y, float timeout = infinityf());
-        float driveToPose(float x, float y, float heading, float minOutput, float maxOutput, float timeout = infinityf());
-        float driveToPose(float x, float y, float heading, float timeout = infinityf());
+        /// @brief Drives to a desired coordinate
+        /// @param x x coordinate
+        /// @param y y coordinate
+        /// @param minOutput minimum speed
+        /// @param maxOutput maximum speed
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double driveTo(double x, double y, double minOutput, double maxOutput, double timeout = infinity());
+
+        /// @brief Drives to a desired coordinate
+        /// @param x x coordinate
+        /// @param y y coordinate
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double driveTo(double x, double y, double timeout = infinity());
+
+        /// @brief Drives to a desired coordinate and heading
+        /// @param x x coordinate
+        /// @param y y coordinate
+        /// @param heading desired heading
+        /// @param minOutput minimum speed
+        /// @param maxOutput maximum speed
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double driveToPose(double x, double y, double heading, double minOutput, double maxOutput, double timeout = infinity());
+
+        /// @brief Drives to a desired coordinate and heading
+        /// @param x x coordinate
+        /// @param y y coordinate
+        /// @param heading desired heading
+        /// @param timeout time before movement gives up, seconds
+        /// @return time the movement took
+        double driveToPose(double x, double y, double heading, double timeout = infinity());
     };
 }

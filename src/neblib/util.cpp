@@ -1,36 +1,29 @@
 #include "neblib/util.hpp"
 
-template <class F>
-vex::task neblib::launchTask(F &&function)
+double neblib::toRad(double degrees)
 {
-  // static_assert(std::is_invocable_r_v<void, F>);
-  return vex::task([](void *parameters)
-                   {
-    std::unique_ptr<std::function<void()>> ptr{static_cast<std::function<void()>*>(parameters)};
-    (*ptr)();
-    return 0; }, new std::function<void()>(std::forward<F>(function)));
+    return M_PI * degrees / 180.0;
 }
 
-int neblib::sign(double x)
+double neblib::toDeg(double radians)
 {
-  return (0 < x) - (x < 0);
+    return radians * 180.0 / M_PI;
 }
 
-float neblib::toRad(float deg)
+double neblib::clamp(double num, double min, double max)
 {
-  return deg * 3.1415926535 / 180;
+    if (num < min)
+        return min;
+    if (num > max)
+        return max;
+    return num;
 }
 
-float neblib::toDeg(float rad)
+double neblib::wrap(double num, double min, double max)
 {
-  return rad * 180 / 3.1415926535;
-}
-
-float neblib::wrap(float num, float min, float max)
-{
-  while (num < min)
-    num += (max - min);
-  while (num > max)
-    num -= (max - min);
-  return num;
+    while (num < min)
+        num += (max - min);
+    while (num > max)
+        num -= (max - min);
+    return num;
 }

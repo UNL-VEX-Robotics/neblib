@@ -2,94 +2,78 @@
 
 neblib::PID::Gains::Gains(double kP, double kI, double kD, double windupRange, bool resetWindupOnSignChange) : kP(kP), kI(kI), kD(kD), windupRange(windupRange), resetWindupOnSignChange(resetWindupOnSignChange) {}
 
-neblib::PID::DerivativeExitConditions::DerivativeExitConditions(double errorTolerance, double derivativeTolerance) : errorTolerance(errorTolerance), derivativeTolerance(derivativeTolerance) {}
-
-bool neblib::PID::DerivativeExitConditions::isSettled(double error, double derivative) { return error <= std::abs(errorTolerance) && derivative <= std::abs(derivativeTolerance); }
-
-neblib::PID::SettleTimeExitConditions::SettleTimeExitConditions(double tolerance, int settleTime, int cycleTime) : tolerance(tolerance), settleTime(settleTime), timeSettled(0), cycleTime(cycleTime) {}
-
-bool neblib::PID::SettleTimeExitConditions::isSettled(double error)
+double neblib::PID::Gains::applyGains(double error, double integral, double derivative)
 {
-    if (error <= std::abs(tolerance))
+    return kP * error + kI * integral + kD * derivative;
+}
+
+neblib::PID::SettleTimeExitConditions::SettleTimeExitConditions(double tolerance, int settleTime, int cycleTime) : tolerance(tolerance), settleTime(settleTime), cycleTime(cycleTime), timeSettled(0)
+{
+}
+
+bool neblib::PID::SettleTimeExitConditions::isSettled(double error, double _)
+{
+    (void)_;
+    if (fabs(error) <= tolerance)
         timeSettled += cycleTime;
     else
         timeSettled = 0;
-
     return timeSettled >= settleTime;
 }
 
-neblib::PID::ExitConditions::ExitConditions(const DerivativeExitConditions &derivativeExitConditions) : type(neblib::PID::ExitConditions::ExitConditionType::DERIVAIVE), derivativeExitConditions(derivativeExitConditions) {}
-
-neblib::PID::ExitConditions::ExitConditions(DerivativeExitConditions &&derivativeExitConditions) : type(neblib::PID::ExitConditions::ExitConditionType::DERIVAIVE), derivativeExitConditions(derivativeExitConditions) {}
-
-neblib::PID::ExitConditions::ExitConditions(const SettleTimeExitConditions &settleTimeExitConditions) : type(neblib::PID::ExitConditions::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {}
-
-neblib::PID::ExitConditions::ExitConditions(SettleTimeExitConditions &&settleTimeExitConditions) : type(neblib::PID::ExitConditions::ExitConditionType::SETTLE_TIME), settleTimeExitConditions(settleTimeExitConditions) {}
-
-bool neblib::PID::ExitConditions::isSettled(double error, double derivative)
+neblib::PID::DerivativeExitConditions::DerivativeExitConditions(double errorTolerance, double derivativeTolerance) : errorTolerance(errorTolerance), derivativeTolerance(derivativeTolerance)
 {
-    switch (type)
-    {
-    case DERIVAIVE:
-        return derivativeExitConditions.isSettled(error, derivative);
-    case SETTLE_TIME:
-        return settleTimeExitConditions.isSettled(error);
-    default:
-        return false;
-    }
 }
 
-neblib::PID::PID(const Gains &gains, const DerivativeExitConditions &derivativeExitConditions) : gains(gains), exitConditions(ExitConditions(derivativeExitConditions)), settled(false), integral(0), hasPreviousError(false) {}
-
-neblib::PID::PID(Gains &&gains, DerivativeExitConditions &&derivativeExitConditions) : gains(gains), exitConditions(ExitConditions(derivativeExitConditions)), settled(false), integral(0), hasPreviousError(false) {}
-
-neblib::PID::PID(const Gains &gains, const SettleTimeExitConditions &settleTimeExitConditions) : gains(gains), exitConditions(ExitConditions(settleTimeExitConditions)), settled(false), integral(0), hasPreviousError(false) {}
-
-neblib::PID::PID(Gains &&gains, SettleTimeExitConditions &&settleTimeExitConditions) : gains(gains), exitConditions(ExitConditions(settleTimeExitConditions)), settled(false), integral(0), hasPreviousError(false) {}
-
-double neblib::PID::getOutput(double error)
+bool neblib::PID::DerivativeExitConditions::isSettled(double error, double derivative)
 {
-    if (error <= std::abs(gains.windupRange))
-        integral += error;
-    else
-        integral = 0;
+    return (fabs(error) <= errorTolerance) && (derivative <= derivativeTolerance);
+}
 
-    if (hasPreviousError)
-    {
-        if (neblib::sign(error) != neblib::sign(previousError))
-            integral = 0;
-    }
+neblib::PID::PID(Gains &&gains, std::shared_ptr<ExitConditions> exitConditions) : gains(std::move(gains)), exitConditions(exitConditions), integral(0.0), previousError(0.0), hasPreviousError(false), settled(false)
+{
+}
 
-    double derivative;
-    if (hasPreviousError)
-        derivative = error - previousError;
-    else
-    {
-        derivative = 0;
-        hasPreviousError = true;
-    }
-    previousError = error;
+neblib::PID::PID(Gains &gains, std::shared_ptr<ExitConditions> exitConditions) : gains(gains), exitConditions(exitConditions), integral(0.0), previousError(0.0), hasPreviousError(false), settled(false)
+{
+}
 
-    settled = exitConditions.isSettled(error, derivative);
-
-    return gains.kP * error + gains.kI * integral + gains.kD * derivative;
+neblib::PID::PID(double kP, double kI, double kD, double windupRange, std::shared_ptr<ExitConditions> exitConditions, bool resetWindupOnSignChange) : gains(kP, kI, kD, windupRange, resetWindupOnSignChange), exitConditions(exitConditions), integral(0.0), previousError(0.0), hasPreviousError(false), settled(false)
+{
 }
 
 double neblib::PID::getOutput(double error, double minOutput, double maxOutput)
 {
-    double output = getOutput(error);
-    if (minOutput > output)
-        return minOutput;
-    if (maxOutput < output)
-        return maxOutput;
-    return output;
+    if (fabs(error) <= gains.windupRange)
+        integral += error;
+    else
+        integral = 0;
+    if (sign(error) != sign(previousError) && hasPreviousError && gains.resetWindupOnSignChange)
+        integral = 0;
+
+    double derivative = hasPreviousError ? error - previousError : 0;
+    previousError = error;
+    hasPreviousError = true;
+
+    settled = exitConditions->isSettled(error, derivative);
+
+    return neblib::clamp(gains.applyGains(error, derivative, integral), minOutput, maxOutput);
 }
 
-bool neblib::PID::isSettled() { return settled; }
+double neblib::PID::getOutput(double error)
+{
+    return this->getOutput(error, -infinity(), infinity());
+}
+
+bool neblib::PID::isSettled()
+{
+    return settled;
+}
 
 void neblib::PID::reset()
 {
-    settled = false;
     integral = 0;
+    previousError = 0;
     hasPreviousError = false;
+    settled = false;
 }

@@ -1,49 +1,39 @@
 #include "neblib/tracker_wheel.hpp"
 
-#include <iostream>
-
-neblib::TrackerWheel::TrackerWheel(vex::rotation &&rotation, float wheelDiameter) : deviceType(ROTATION), rotation(rotation), wheelDiameter(wheelDiameter) {}
-
-neblib::TrackerWheel::TrackerWheel(vex::encoder &&encoder, float wheelDiameter) : deviceType(OS_ENCODER), encoder(encoder), wheelDiameter(wheelDiameter) {}
-
-neblib::TrackerWheel::~TrackerWheel()
+neblib::RotationTrackerWheel::RotationTrackerWheel(vex::rotation &rotation, double wheelDiameter) : rotation(rotation), wheelDiameter(wheelDiameter)
 {
-    switch (deviceType)
-    {
-    case ROTATION:
-        rotation.~rotation();
-        break;
-    case OS_ENCODER:
-        encoder.~encoder();
-        break;
-    }
 }
 
-float neblib::TrackerWheel::getPosition()
+double neblib::RotationTrackerWheel::getPosition()
 {
-    float currentPosition;
-    switch (deviceType)
-    {
-    case ROTATION:
-        currentPosition = rotation.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
-        break;
-    case OS_ENCODER:
-        currentPosition = encoder.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
-        break;
-    }
-    return currentPosition;
+    return rotation.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
 }
 
-void neblib::TrackerWheel::resetPosition()
+void neblib::RotationTrackerWheel::resetPosition()
 {
-    switch (deviceType)
-    {
-    case ROTATION:
-        rotation.resetPosition();
-        break;
-    
-    case OS_ENCODER:
-        encoder.resetRotation();
-        break;
-    }
+    this->setPosition(0.0, vex::rotationUnits::deg);
+}
+
+void neblib::RotationTrackerWheel::setPosition(double newPosition, vex::rotationUnits units)
+{
+    rotation.setPosition(newPosition, units);
+}
+
+neblib::EncoderTrackerWheel::EncoderTrackerWheel(vex::encoder &encoder, double wheelDiameter) : encoder(encoder), wheelDiameter(wheelDiameter)
+{
+}
+
+double neblib::EncoderTrackerWheel::getPosition()
+{
+    return encoder.position(vex::rotationUnits::rev) * wheelDiameter * M_PI;
+}
+
+void neblib::EncoderTrackerWheel::resetPosition()
+{
+    this->setPosition(0.0, vex::rotationUnits::deg);
+}
+
+void neblib::EncoderTrackerWheel::setPosition(double newPosition, vex::rotationUnits units)
+{
+    encoder.setPosition(newPosition, units);
 }

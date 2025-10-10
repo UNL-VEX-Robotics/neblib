@@ -3,12 +3,12 @@
 #include "neblib/util.hpp"
 
 namespace neblib
-{
-    /// @brief Class for PIDs
+{   
+    /// @brief Class used for PIDs
     class PID
     {
     public:
-        /// @brief Struct for gains
+        /// @brief Struct to contain PID gains
         struct Gains
         {
             double kP;
@@ -17,188 +17,118 @@ namespace neblib
             double windupRange;
             bool resetWindupOnSignChange;
 
-            /**
-             * @brief Constructor for the PID Gains struct
-             *
-             * @param kP proportional gain
-             * @param kI integral gain
-             * @param kD derivative gain
-             * @param windupRange range where the integral winds up
-             * @param resetWindupOnSignChange determines if the integral gets reset when you pass the target
-             */
+            /// @brief Constructs a Gains object
+            /// @param kP proportional constant
+            /// @param kI integral constant
+            /// @param kD derivative constant
+            /// @param windupRange range where integral is used
+            /// @param resetWindupOnSignChange resets integral if sign is changed
             Gains(double kP, double kI, double kD, double windupRange, bool resetWindupOnSignChange = true);
+
+            /// @brief Applies the gains to input and returns a final output
+            /// @param error current error
+            /// @param integral current integral value
+            /// @param derivative current derivative value
+            /// @return output
+            double applyGains(double error, double integral, double derivative);
         };
 
-        /// @brief Class for exit conditions using derivative and error tolerance
-        class DerivativeExitConditions
+        /// @brief Base class for PID Exit Conditions
+        class ExitConditions
+        {
+        public:
+            // pure virtual methods that need to be implemented
+            virtual ~ExitConditions() = default;
+            virtual bool isSettled(double error, double derivative) = 0;
+        };
+
+        /// @brief Exit conditions using settle time
+        class SettleTimeExitConditions : public ExitConditions
+        {
+        private:
+            double tolerance;
+            int settleTime;
+            int cycleTime;
+            int timeSettled;
+
+        public:
+            /// @brief Constructs a SettleTimeExitConditions object
+            /// @param tolerance tolerance where settle time is counted
+            /// @param settleTime time within tolerance to be settled, in mS
+            /// @param cycleTime length of time each loop iteration is, in mS
+            SettleTimeExitConditions(double tolerance, int settleTime, int cycleTime);
+
+            /// @brief Determines if the PID is settled
+            /// @param error current error
+            /// @param _ placeholder
+            /// @return true if settled, false otherwise
+            bool isSettled(double error, double _) override;
+        };
+
+        /// @brief Exit conditions using derivative
+        class DerivativeExitConditions : public ExitConditions
         {
         private:
             double errorTolerance;
             double derivativeTolerance;
 
         public:
-            /**
-             * @brief Constructor for the PID derivative based exit condition
-             *
-             * @param errorTolerance range that error must be within to exit
-             * @param derivativeTolerance range that derivative must be within to exit
-             */
+            /// @brief Constructs a DerivativeExitConditions object
+            /// @param errorTolerance tolerance for error
+            /// @param derivativeTolerance tolerance for derivative
             DerivativeExitConditions(double errorTolerance, double derivativeTolerance);
 
-            /**
-             * @brief Determines if the PID has met the exit conditions
-             *
-             * @param error the current error of the PID
-             * @param derivative the current derivative of the PID
-             *
-             * @return true if PID has met the exit conditions, false otherwise
-             */
-            bool isSettled(double error, double derivative);
+            /// @brief Determines if the PID is settled
+            /// @param error current error
+            /// @param derivative current derivative
+            /// @return true if settled, false otherwise
+            bool isSettled(double error, double derivative) override;
         };
 
-        /// @brief Class for exit conditions using error tolerance and settle time
-        class SettleTimeExitConditions
-        {
-        private:
-            double tolerance;
-            int settleTime;
-            int timeSettled;
-            int cycleTime;
-
-        public:
-            /**
-             * @brief Constructor for the PID settle time based exit conditions
-             *
-             * @param tolerance the error tolerance to meet the exit conditions
-             * @param settleTime the length of time (milliseconds) that the error must be within the tolerance
-             * @param cycleTime the length of time (milliseconds) that the loop takes
-             */
-            SettleTimeExitConditions(double tolerance, int settleTime, int cycleTime);
-
-            /**
-             * @brief Determines if the PID exit conditions have been met
-             *
-             * @param error the current PID error
-             *
-             * @return true if the exit conditions have been met, false otherwise
-             */
-            bool isSettled(double error);
-        };
-
-    public:
-        /// @brief Wrapper class to contain derivative and settle time exit conditions
-        class ExitConditions
-        {
-        private:
-            enum ExitConditionType
-            {
-                DERIVAIVE,
-                SETTLE_TIME
-            };
-
-            ExitConditionType type;
-            union
-            {
-                DerivativeExitConditions derivativeExitConditions;
-                SettleTimeExitConditions settleTimeExitConditions;
-            };
-
-        public:
-            /**
-             * @brief Constructor for ExitConditions using DerivativeExitConditions passed by reference
-             */
-            ExitConditions(const DerivativeExitConditions &derivativeExitConditions);
-            /**
-             * @brief Constructor for ExitConditions using DerivativeExitConditions using move semantics
-             */
-            ExitConditions(DerivativeExitConditions &&derivativeExitConditions);
-
-            /**
-             * @brief Constructor for ExitConditions using SettleTimeExitConditions passed by reference
-             */
-            ExitConditions(const SettleTimeExitConditions &settleTimeExitConditions);
-            /**
-             * @brief Constructor for ExitConditions using SettleTimeExitConditions using move semantics
-             */
-            ExitConditions(SettleTimeExitConditions &&settleTimeExitConditions);
-
-            /**
-             * @brief Determines if the PID has settled
-             *
-             * @param error the current error of the PID
-             * @param derivative the current derivative of the PID
-             *
-             * @return true if PID has met exit conditions, false otherwise
-             */
-            bool isSettled(double error, double derivative);
-        };
-
+    private:
         Gains gains;
-        ExitConditions exitConditions;
-        bool settled;
+        std::shared_ptr<ExitConditions> exitConditions;
         double integral;
         double previousError;
         bool hasPreviousError;
-
+        bool settled;
     public:
-        /**
-         * @brief Constructor for PID using derivative based exit conditions passed by reference
-         *
-         * @param gains Gains struct
-         * @param derivativeExitConditions derivative based exit conditions
-         */
-        PID(const Gains &gains, const DerivativeExitConditions &derivativeExitConditions);
-        /**
-         * @brief Constructor for PID using derivative based exit conditions using move semantics
-         *
-         * @param gains Gains struct
-         * @param derivativeExitConditions derivative based exit conditions
-         */
-        PID(Gains &&gains, DerivativeExitConditions &&derivativeExitConditions);
+        /// @brief Constructs a PID object
+        /// @param gains Gains object
+        /// @param exitConditions heap allocated exit conditions
+        PID(Gains&& gains, std::shared_ptr<ExitConditions> exitConditions);
 
-        /**
-         * @brief Constructor for PID using settle time based exit conditions passed by reference
-         *
-         * @param gains Gains struct
-         * @param settleTimeExitConditions settle time based exit conditions
-         */
-        PID(const Gains &gains, const SettleTimeExitConditions &settleTimeExitConditions);
-        /**
-         * @brief Constructor for PID using settle time based exit conditions using move semantics
-         *
-         * @param gains Gains struct
-         * @param settleTimeExitConditions settle time based exit conditions
-         */
-        PID(Gains &&gains, SettleTimeExitConditions &&settleTimeExitConditions);
+        /// @brief Constructs a PID object
+        /// @param gains Gains object
+        /// @param exitConditions heap allocated exit conditions
+        PID(Gains& gains, std::shared_ptr<ExitConditions> exitConditions);
 
-        /**
-         * @brief Returns the output of the PID
-         *
-         * @param error the current error or distance to the target
-         *
-         * @return the PID output
-         */
-        double getOutput(double error);
-        /**
-         * @brief Returns the output of the PID
-         *
-         * @param error the current error or distance to the target
-         * @param minOutput the minimum acceptable output value
-         * @param maxOutput the maximum acceptable output value
-         *
-         * @return the PID output
-         */
+        /// @brief Constructs a PID object
+        /// @param kP proportional constant
+        /// @param kI integral constant
+        /// @param kD derivative constant
+        /// @param windupRange range where integral is used
+        /// @param exitConditions heap allocated exit conditions
+        /// @param resetWindupOnSignChange resets integral if sign changes
+        PID(double kP, double kI, double kD, double windupRange, std::shared_ptr<ExitConditions> exitConditions, bool resetWindupOnSignChange = true);
+
+        /// @brief Gets the output limited to a range
+        /// @param error current error
+        /// @param minOutput minimum acceptable output
+        /// @param maxOutput maximum acceptable output
+        /// @return current output
         double getOutput(double error, double minOutput, double maxOutput);
 
-        /**
-         * @brief Determines if the PID is settled
-         *
-         * @return true if PID is settled, false otherwise
-         */
+        /// @brief Gets the output
+        /// @param error current error
+        /// @return current output
+        double getOutput(double error);
+        
+        /// @brief Determines if the PID is settled
+        /// @return true if settled, false otherwise
         bool isSettled();
 
-        /// @brief Resets the PID object
+        /// @brief Resets the PID
         void reset();
     };
-
 }

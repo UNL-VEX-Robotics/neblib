@@ -3,47 +3,69 @@
 
 namespace neblib
 {
-
+    /// @brief Base TrackerWheel class used for pointers and references
     class TrackerWheel
     {
+    public:
+        /// @brief Deconstructs a TrackerWheel object
+        virtual ~TrackerWheel() = default;
+
+        // Pure virtual methods that must be implemented
+        virtual double getPosition() = 0;
+        virtual void resetPosition() = 0;
+        virtual void setPosition(double newPosition, vex::rotationUnits units) = 0;
+    };
+
+    /// @brief TrackerWheel class with a vex v5 rotation sensor
+    class RotationTrackerWheel : public TrackerWheel
+    {
     private:
-        enum DeviceType
-        {
-            ROTATION,
-            OS_ENCODER
-        };
-
-        DeviceType deviceType;
-
-        union
-        {
-            vex::rotation rotation;
-            vex::encoder encoder;
-        };
-
-        float wheelDiameter;
-
-        float previousPosition = 0;
+        vex::rotation &rotation;
+        double wheelDiameter;
 
     public:
-        /// @brief Constructs a TrackerWheel object
-        /// @param rotation a vex rotation object
+        /// @brief Constructs a RotationTrackerWheel object
+        /// @param rotation a vex::rotation object
         /// @param wheelDiameter the diameter of the tracker wheel
-        TrackerWheel(vex::rotation &&rotation, float wheelDiameter);
+        RotationTrackerWheel(vex::rotation &rotation, double wheelDiameter);
 
-        /// @brief Constructs a TrackerWheel object
-        /// @param encoder a vex encoder object
+        /// @brief Gets the position of the tracker wheel, unit = wheelDiameter unit
+        /// @return The position of the tracker wheel
+        double getPosition() override;
+
+        /// @brief Resets the position of the rotation sensor to zero
+        void resetPosition() override;
+
+        /// @brief Sets the position of the rotation sensor to a desired position
+        /// @param newPosition desired position
+        /// @param units vex::rotationUnits
+        void setPosition(double newPosition, vex::rotationUnits units) override;
+    };
+
+    /// @brief TrackerWheel class with a vex optical shaft encoder
+    class EncoderTrackerWheel : public TrackerWheel
+    {
+    private:
+        vex::encoder &encoder;
+        double wheelDiameter;
+
+    public:
+        /// @brief Creates an EncoderTrackerWheel object
+        /// @param encoder a vex::encoder object
         /// @param wheelDiameter the diameter of the tracker wheel
-        TrackerWheel(vex::encoder &&encoder, float wheelDiameter);
+        EncoderTrackerWheel(vex::encoder &encoder, double wheelDiameter);
 
-        /// @brief Deconstructs a TrackerWheel object
-        ~TrackerWheel();
+        /// @brief Gets the position of the tracker wheel, unit = wheelDiameter unit
+        /// @return The position of the tracker wheel
+        double getPosition() override;
 
-        /// @brief Gets the current position of the tracker wheel
-        /// @return float with the position of the tracker wheel, in the same units as the wheel diameter
-        float getPosition();
+        /// @brief Resets the position of the encoder to zero
+        void resetPosition() override;
 
-        void resetPosition();
+        /// @brief Sets the position of the encoder to a desired value
+        /// @param newPosition desired position
+        /// @param units vex::rotationUnits
+        void setPosition(double newPosition, vex::rotationUnits units) override;
     };
 
 }
