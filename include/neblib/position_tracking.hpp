@@ -106,4 +106,99 @@ namespace neblib
         /// @param timeout a timeout before the calibration stops if not complete
         void calibrate(double timeout = infinity());
     };
+
+    class MCL : public PositionTracking
+    {
+    private:
+        /// @brief Struct to represent a Particle
+        struct Particle
+        {
+            Pose pose;
+            double weight;
+
+            /// @brief Constructs a particle using a referenced position
+            /// @param x desired x
+            /// @param y desired y
+            /// @param heading desired heading
+            /// @param noise sensor noise
+            Particle(double x, double y, double heading, double noise);
+
+            /// @brief Constructs a particle in a random position
+            Particle();
+
+            /// @brief Sets the pose of the particle with noise
+            /// @param x x position
+            /// @param y y position
+            /// @param heading heading
+            /// @param noise noise
+            void setPose(double x, double y, double heading, double noise);
+
+            /// @brief Sets the particle's pose
+            /// @param x x position
+            /// @param y y position
+            /// @param heading heading
+            void setPose(double x, double y, double heading);
+
+            /// @brief Calculates what the sensor values would be at the given particle
+            /// @param obstacles std::vector of particles represented by Lines
+            /// @param sensors std::vector of sensors
+            /// @return std::vector<double> containing the same number of distance values as there are sensors
+            std::vector<double> calculateDistances(const std::vector<Line> &obstacles, const std::vector<std::unique_ptr<Ray>> &sensors);
+
+            /// @brief Assigns the weight to the particle
+            /// @param obstacles std::vector of particles represented by Lines
+            /// @param sensors std::vector of sensors
+            /// @param actualReadings std::vector<double> of the actual sensor readings
+            /// @param stddev standard deviation
+            /// @return the new weight of the particle
+            double assignWeight(const std::vector<Line> &obstacles, const std::vector<std::unique_ptr<Ray>> &sensors, const std::vector<double> &actualReadings, double stddev);
+        };
+
+        // devices
+        std::vector<std::unique_ptr<Ray>> sensors;
+        std::unique_ptr<TrackerWheel> parallelWheel;
+        std::unique_ptr<TrackerWheel> perpendicularWheel;
+        vex::inertial &imu;
+
+        // MCL
+        std::vector<Particle> particles;
+        std::vector<Line> obstacles;
+        Pose estimate;
+        double stddev;
+        double noise;
+
+        // Tracking
+        double parallelOffset;
+        double perpendicularOffset;
+        double previousPerpendicular;
+        double previousParallel;
+        double previousRotation;
+
+    public:
+        /// @brief Creates an MCL object
+        /// @param sensors vector of unique pointers to Ray objects
+        /// @param parallel unique pointer to tracker wheel object
+        /// @param parallelOffset parallel offset from center
+        /// @param perpendicular unique pointer to tracker wheel object
+        /// @param perpendicularOffset perpendicular offset from center
+        /// @param imu inertial sensor
+        /// @param numParticles number of particles
+        /// @param obstacles vector of lines representing obstacles
+        /// @param stddev standard deviation for sensor measurements
+        /// @param noise added noise
+        MCL(std::vector<std::unique_ptr<Ray>> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise);
+
+        /// @brief Updates the MCL
+        void update();
+
+        /// @brief Gets the Pose estimate
+        /// @return Pose
+        Pose getPose() override;
+
+        /// @brief Sets the pose of the robot
+        /// @param x x position
+        /// @param y y position
+        /// @param heading heading
+        void setPose(double x, double y, double heading) override;
+    };
 }
