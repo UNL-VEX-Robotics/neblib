@@ -1,4 +1,4 @@
-#include "neblib/odometry.hpp"
+#include "neblib/position_tracking.hpp"
 
 #include <iostream>
 
@@ -11,6 +11,10 @@ neblib::Pose &neblib::Pose::operator+=(const neblib::Pose &other)
     heading = neblib::wrap(heading + other.heading, 0, 360);
     return *this;
 }
+
+neblib::Point::Point(double x, double y): x(x), y(y) {}
+
+neblib::Line::Line(neblib::Point& p0, neblib::Point& p1): p0(p0), p1(p1) {}
 
 neblib::Odometry::Odometry(neblib::TrackerWheel &parallelWheel, double parallelOffset, neblib::TrackerWheel &perpendicularWheel, double perpendicularOffset, vex::inertial &imu) : parallel(parallelWheel), perpendicular(perpendicularWheel), imu(imu), parallelOffset(parallelOffset), perpendicularOffset(perpendicularOffset), currentPose(0.0, 0.0, 0.0), previousRotation(0.0), previousParallel(0.0), previousPerpendicular(0.0)
 {

@@ -1,7 +1,9 @@
 #pragma once
 #include "vex.h"
-#include "neblib/tracker_wheel.hpp"
+#include "neblib/devices.hpp"
 #include "neblib/util.hpp"
+
+#include <vector>
 
 namespace neblib
 {
@@ -20,6 +22,30 @@ namespace neblib
         Pose(double x, double y, double heading);
 
         Pose &operator+=(const Pose &other);
+    };
+
+    /// @brief Struct to contain a Point
+    struct Point
+    {
+        double x;
+        double y;
+
+        /// @brief Constructs a Point
+        /// @param x x position
+        /// @param y y position
+        Point(double x, double y);
+    };
+
+    /// @brief Struct to contain a Line
+    struct Line
+    {
+        Point p0;
+        Point p1;
+
+        /// @brief Constructs a Line
+        /// @param p0 initial point
+        /// @param p1 final point
+        Line(Point &p0, Point &p1);
     };
 
     /// @brief Base PositionTracking class used for pointers and references
@@ -80,5 +106,4 @@ namespace neblib
         /// @param timeout a timeout before the calibration stops if not complete
         void calibrate(double timeout = infinity());
     };
-
 }
