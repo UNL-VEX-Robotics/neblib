@@ -68,4 +68,27 @@ namespace neblib
         void setPosition(double newPosition, vex::rotationUnits units) override;
     };
 
+    class Ray
+    {
+    public:
+        double yOffset;
+        double xOffset;
+        double headingOffset;
+
+        Ray(double xOffset, double yOffset, double headingOffset);
+        virtual ~Ray() = default;
+
+        virtual double getReading(vex::distanceUnits unit) = 0;
+    };
+
+    class Distance : public Ray
+    {
+    private:
+        vex::distance& distance;
+    
+    public:
+        Distance(vex::distance &distance, double xOffset, double yOffset, double headingOffset);
+
+        double getReading(vex::distanceUnits unit) override;
+    };
 }

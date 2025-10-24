@@ -1,12 +1,13 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <random>
 #include "vex.h"
 
 namespace neblib
 {
     /// @brief Launches a task using std::bind
-    /// @tparam F 
+    /// @tparam F
     /// @param function the function that will be running as a task
     /// @return vex::task
     template <class F>
@@ -21,7 +22,7 @@ namespace neblib
     }
 
     /// @brief Determines the sign of a number
-    /// @tparam T 
+    /// @tparam T
     /// @param num a number
     /// @return 1 if positive, -1 if negative, 0 otherwise
     template <typename T>
@@ -58,4 +59,15 @@ namespace neblib
     /// @return number
     double wrap(double num, double min, double max);
 
+    /// @brief Generates a random number following the Gaussian Distribution
+    /// @param mean avergae/mean
+    /// @param stddev standard deviation
+    /// @return random number
+    double gaussRandom(double mean, double stddev);
+
+    /// @brief Generates a random number using a uniform distribution
+    /// @param min minimum acceptable value
+    /// @param max maximum acceptable value
+    /// @return random number
+    double uniformRandom(double min, double max);
 }

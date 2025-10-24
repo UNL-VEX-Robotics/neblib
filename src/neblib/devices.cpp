@@ -1,4 +1,4 @@
-#include "neblib/tracker_wheel.hpp"
+#include "neblib/devices.hpp"
 
 neblib::RotationTrackerWheel::RotationTrackerWheel(vex::rotation &rotation, double wheelDiameter) : rotation(rotation), wheelDiameter(wheelDiameter)
 {
@@ -37,3 +37,9 @@ void neblib::EncoderTrackerWheel::setPosition(double newPosition, vex::rotationU
 {
     encoder.setPosition(newPosition, units);
 }
+
+neblib::Ray::Ray(double xOffset, double yOffset, double headingOffset) : yOffset(yOffset), xOffset(xOffset), headingOffset(headingOffset) {}
+
+neblib::Distance::Distance(vex::distance &distance, double xOffset, double yOffset, double headingOffset) : Ray(xOffset, yOffset, headingOffset), distance(distance) {}
+
+double neblib::Distance::getReading(vex::distanceUnits unit) { return distance.objectDistance(unit); }

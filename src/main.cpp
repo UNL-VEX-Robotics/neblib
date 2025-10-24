@@ -8,7 +8,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include "vex.h"
-#include "neblib/odometry.hpp"
+#include "neblib/position_tracking.hpp"
 #include <iostream>
 
 using namespace vex;
