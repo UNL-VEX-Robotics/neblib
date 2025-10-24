@@ -40,6 +40,6 @@ void neblib::EncoderTrackerWheel::setPosition(double newPosition, vex::rotationU
 
 neblib::Ray::Ray(double xOffset, double yOffset, double headingOffset) : yOffset(yOffset), xOffset(xOffset), headingOffset(headingOffset) {}
 
-neblib::Distance::Distance(vex::distance &distance, double xOffset, double yOffset, double headingOffset) : distance(distance), Ray(xOffset, yOffset, headingOffset) {}
+neblib::Distance::Distance(vex::distance &distance, double xOffset, double yOffset, double headingOffset) : Ray(xOffset, yOffset, headingOffset), distance(distance) {}
 
 double neblib::Distance::getReading(vex::distanceUnits unit) { return distance.objectDistance(unit); }
