@@ -45,7 +45,7 @@ namespace neblib
         /// @brief Constructs a Line
         /// @param p0 initial point
         /// @param p1 final point
-        Line(Point &p0, Point &p1);
+        Line(Point p0, Point p1);
     };
 
     /// @brief Base PositionTracking class used for pointers and references
@@ -143,7 +143,7 @@ namespace neblib
             /// @param obstacles std::vector of particles represented by Lines
             /// @param sensors std::vector of sensors
             /// @return std::vector<double> containing the same number of distance values as there are sensors
-            std::vector<double> calculateDistances(const std::vector<Line> &obstacles, const std::vector<std::unique_ptr<Ray>> &sensors);
+            std::vector<double> calculateDistances(const std::vector<Line> &obstacles, const std::vector<neblib::Ray*> &sensors);
 
             /// @brief Assigns the weight to the particle
             /// @param obstacles std::vector of particles represented by Lines
@@ -151,11 +151,11 @@ namespace neblib
             /// @param actualReadings std::vector<double> of the actual sensor readings
             /// @param stddev standard deviation
             /// @return the new weight of the particle
-            double assignWeight(const std::vector<Line> &obstacles, const std::vector<std::unique_ptr<Ray>> &sensors, const std::vector<double> &actualReadings, double stddev);
+            double assignWeight(const std::vector<Line> &obstacles, const std::vector<neblib::Ray*> &sensors, const std::vector<double> &actualReadings, double stddev);
         };
 
         // devices
-        std::vector<std::unique_ptr<Ray>> sensors;
+        std::vector<Ray*> sensors;
         std::unique_ptr<TrackerWheel> parallelWheel;
         std::unique_ptr<TrackerWheel> perpendicularWheel;
         vex::inertial &imu;
@@ -186,7 +186,7 @@ namespace neblib
         /// @param obstacles vector of lines representing obstacles
         /// @param stddev standard deviation for sensor measurements
         /// @param noise added noise
-        MCL(std::vector<std::unique_ptr<Ray>> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise);
+        MCL(std::vector<neblib::Ray*> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise);
 
         /// @brief Updates the MCL
         void update();

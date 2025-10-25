@@ -1,6 +1,6 @@
 #include "neblib/xdrive.hpp"
 
-neblib::XDrive::XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, std::unique_ptr<PositionTracking> positionTracking, vex::inertial &imu) : frontLeft(frontLeft), frontRight(frontRight), backLeft(backLeft), backRight(backRight), positionTracking(std::move(positionTracking)), imu(imu), turnPID(nullptr), linearPID(nullptr), rotationalPID(nullptr)
+neblib::XDrive::XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, PositionTracking* positionTracking, vex::inertial &imu) : frontLeft(frontLeft), frontRight(frontRight), backLeft(backLeft), backRight(backRight), positionTracking(std::move(positionTracking)), imu(imu), turnPID(nullptr), linearPID(nullptr), rotationalPID(nullptr)
 {
 }
 

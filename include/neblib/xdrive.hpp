@@ -13,7 +13,7 @@ namespace neblib
         vex::motor_group backLeft;
         vex::motor_group backRight;
 
-        std::unique_ptr<PositionTracking> positionTracking;
+        PositionTracking* positionTracking;
 
         vex::inertial &imu;
 
@@ -28,7 +28,7 @@ namespace neblib
         /// @param backLeft back left motor group
         /// @param backRight back right motor group
         /// @param positionTracking std::unique_ptr for position tracking
-        XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, std::unique_ptr<PositionTracking> positionTracking, vex::inertial &imu);
+        XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, PositionTracking* positionTracking, vex::inertial &imu);
 
         /// @brief Sets the PID used for turn-in-place movements
         /// @param pid reference to a PID object

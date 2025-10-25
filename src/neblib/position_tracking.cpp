@@ -14,7 +14,7 @@ neblib::Pose &neblib::Pose::operator+=(const neblib::Pose &other)
 
 neblib::Point::Point(double x, double y) : x(x), y(y) {}
 
-neblib::Line::Line(neblib::Point &p0, neblib::Point &p1) : p0(p0), p1(p1) {}
+neblib::Line::Line(neblib::Point p0, neblib::Point p1) : p0(p0), p1(p1) {}
 
 neblib::Odometry::Odometry(neblib::TrackerWheel &parallelWheel, double parallelOffset, neblib::TrackerWheel &perpendicularWheel, double perpendicularOffset, vex::inertial &imu) : parallel(parallelWheel), perpendicular(perpendicularWheel), imu(imu), parallelOffset(parallelOffset), perpendicularOffset(perpendicularOffset), currentPose(0.0, 0.0, 0.0), previousRotation(0.0), previousParallel(0.0), previousPerpendicular(0.0)
 {
@@ -91,7 +91,7 @@ void neblib::MCL::Particle::setPose(double x, double y, double heading, double n
 
 void neblib::MCL::Particle::setPose(double x, double y, double heading) { pose = Pose(x, y, heading); }
 
-std::vector<double> neblib::MCL::Particle::calculateDistances(const std::vector<neblib::Line> &obstacles, const std::vector<std::unique_ptr<neblib::Ray>> &sensors)
+std::vector<double> neblib::MCL::Particle::calculateDistances(const std::vector<neblib::Line> &obstacles, const std::vector<neblib::Ray*> &sensors)
 {
     std::vector<double> distances;
     distances.reserve(sensors.size());
@@ -126,7 +126,7 @@ std::vector<double> neblib::MCL::Particle::calculateDistances(const std::vector<
     return distances;
 }
 
-double neblib::MCL::Particle::assignWeight(const std::vector<Line> &obstacles, const std::vector<std::unique_ptr<neblib::Ray>> &sensors, const std::vector<double> &actualReadings, double stddev)
+double neblib::MCL::Particle::assignWeight(const std::vector<Line> &obstacles, const std::vector<neblib::Ray*> &sensors, const std::vector<double> &actualReadings, double stddev)
 {
     if (fabs(pose.x) > 72 || fabs(pose.y) > 72)
     {
@@ -149,7 +149,7 @@ double neblib::MCL::Particle::assignWeight(const std::vector<Line> &obstacles, c
     }
 }
 
-neblib::MCL::MCL(std::vector<std::unique_ptr<Ray>> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise) : sensors(std::move(sensors)), parallelWheel(std::move(parallel)), perpendicularWheel(std::move(perpendicular)), imu(imu), obstacles(obstacles), estimate(neblib::Pose(0.0, 0.0, 0.0)), stddev(stddev), noise(noise), parallelOffset(parallelOffset), perpendicularOffset(perpendicularOffset), previousPerpendicular(0.0), previousParallel(0.0), previousRotation(0.0)
+neblib::MCL::MCL(std::vector<neblib::Ray*> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise) : sensors(sensors), parallelWheel(std::move(parallel)), perpendicularWheel(std::move(perpendicular)), imu(imu), obstacles(obstacles), estimate(neblib::Pose(0.0, 0.0, 0.0)), stddev(stddev), noise(noise), parallelOffset(parallelOffset), perpendicularOffset(perpendicularOffset), previousPerpendicular(0.0), previousParallel(0.0), previousRotation(0.0)
 {
     particles.reserve(numParticles);
     for (int i = 0; i < numParticles; i++)
