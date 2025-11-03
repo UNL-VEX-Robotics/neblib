@@ -9,6 +9,7 @@
 
 #include "vex.h"
 #include "neblib/xdrive.hpp"
+#include "neblib/auton_selector.hpp"
 #include <iostream>
 
 using namespace vex;
@@ -18,42 +19,6 @@ competition Competition;
 
 // define your global instances of motors and other devices here
 brain Brain;
-controller controller1(primary);
-
-vex::motor LFT = vex::motor(PORT12, ratio6_1, false);
-vex::motor LFB = vex::motor(PORT13, ratio6_1, true);
-vex::motor RFT = vex::motor(PORT3, ratio6_1, true);
-vex::motor RFB = vex::motor(PORT2, ratio6_1, false);
-vex::motor LBT = vex::motor(PORT14, ratio6_1, false);
-vex::motor LBB = vex::motor(PORT15, ratio6_1, true);
-vex::motor RBT = vex::motor(PORT5, ratio6_1, true);
-vex::motor RBB = vex::motor(PORT4, ratio6_1, false);
-
-vex::rotation parallel(PORT11);
-vex::rotation perpendicular(PORT1);
-vex::inertial imu(PORT16);
-vex::distance dist(PORT17);
-
-neblib::MCL mcl(
-    { new neblib::Distance(dist, 0.0, 0.0, 0.0) },
-    std::unique_ptr<neblib::TrackerWheel>(new neblib::RotationTrackerWheel(parallel, 2.0)),
-    2.0,
-    std::unique_ptr<neblib::TrackerWheel>(new neblib::RotationTrackerWheel(perpendicular, 2.0)),
-    2.0,
-    imu,
-    100,
-    {
-        neblib::Line(neblib::Point(-72.0, -72.0), neblib::Point(72.0, -72.0)),
-        neblib::Line(neblib::Point(72.0, 72.0), neblib::Point(72.0, -72.0)),
-        neblib::Line(neblib::Point(-72.0, 72.0), neblib::Point(72.0, 72.0)),
-        neblib::Line(neblib::Point(-72.0, 72.0), neblib::Point(-72.0, -72.0))
-    },
-    1.0,
-    0.1
-);
-
-neblib::XDrive xDrive(vex::motor_group(LFT, LFB), vex::motor_group(RFT, RFB), vex::motor_group(LBT, LBB), vex::motor_group(RBT, RBB), &mcl, imu);
-
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
 /*                                                                           */
@@ -65,7 +30,31 @@ neblib::XDrive xDrive(vex::motor_group(LFT, LFB), vex::motor_group(RFT, RFB), ve
 /*---------------------------------------------------------------------------*/
 
 void pre_auton(void) {
+  neblib::Page redPage = neblib::Page(neblib::Button(0, 0, 160, 50, vex::color(155, 155, 155), vex::color(50, 50, 50), vex::color(255, 255, 255), vex::color(0, 0, 0), "Red"), {
+    neblib::Button(10, 120, 160, 50, vex::color(0, 0, 0), vex::color(150, 0, 0), vex::color(255, 255, 255), vex::color(255, 255, 255), "Left Red AWP"),
+    neblib::Button(310, 120, 160, 50, vex::color(0, 0, 0), vex::color(150, 0, 0), vex::color(255, 255, 255), vex::color(255, 255, 255), "Left Red Elim")
+  });
 
+  neblib::Page bluePage = neblib::Page(neblib::Button(160, 0, 160, 50, vex::color(155, 155, 155), vex::color(50, 50, 50), vex::color(255, 255, 255), vex::color(0, 0, 0), "Blue"), {
+    neblib::Button(10, 120, 160, 50, vex::color(0, 0, 0), vex::color(0, 0, 150), vex::color(255, 255, 255), vex::color(255, 255, 255), "Left Blue AWP"),
+    neblib::Button(310, 120, 160, 50, vex::color(0, 0, 0), vex::color(0, 0, 150), vex::color(255, 255, 255), vex::color(255, 255, 255), "Left Blue Elim")
+  });
+
+  neblib::Page skillsPage = neblib::Page(neblib::Button(320, 0, 160, 50, vex::color(155, 155, 155), vex::color(50, 50, 50), vex::color(255, 255, 255), vex::color(0, 0, 0), "Skills"), {
+    neblib::Button(10, 120, 160, 50, vex::color(0, 0, 0), vex::color(150, 0, 0), vex::color(255, 255, 255), vex::color(255, 255, 255), "Left Skills")
+  });
+  neblib::AutonSelector selector = neblib::AutonSelector(Brain,
+    { &redPage, &bluePage, &skillsPage },
+    neblib::Button(180, 120, 120, 50, vex::color(255, 255, 255), vex::color(0, 0, 0), vex::color(0, 0, 0), vex::color(255, 255, 255), "Calibrate"));
+
+  selector.runSelector();
+  Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("Auton: ");
+  Brain.Screen.print(selector.getAuton());
+  Brain.Screen.setCursor(2, 1);
+  Brain.Screen.print("Color: ");
+  Brain.Screen.print(selector.getColor() == vex::color::blue ? "Blue" : "Red");
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
 }
@@ -89,34 +78,8 @@ void autonomous(void) {
 
 void usercontrol(void) {
 
-  imu.calibrate();
-  task::sleep(2000);
-
-  mcl.setPose(-48.0, -24.0, 270);
-  int time = Brain.Timer.time();
- 
   while (true)
   {
-    mcl.update();
-    neblib::Pose e = mcl.getPose();
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("x: ");
-    Brain.Screen.print(e.x);
-
-    Brain.Screen.setCursor(2, 1);
-    Brain.Screen.print("y: ");
-    Brain.Screen.print(e.y);
-
-    Brain.Screen.setCursor(3, 1);
-    Brain.Screen.print("h: ");
-    Brain.Screen.print(e.heading);
-
-    Brain.Screen.setCursor(4, 1);
-    Brain.Screen.print("t: ");
-    Brain.Screen.print(Brain.Timer.time() - time);
-    time = Brain.Timer.time();
-    
     task::sleep(10);
   }
 }

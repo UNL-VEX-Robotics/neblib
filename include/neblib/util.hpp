@@ -2,6 +2,8 @@
 #include <functional>
 #include <memory>
 #include <random>
+#include <cstring>
+#include <cctype>
 #include "vex.h"
 
 namespace neblib
@@ -70,4 +72,10 @@ namespace neblib
     /// @param max maximum acceptable value
     /// @return random number
     double uniformRandom(double min, double max);
+
+    /// @brief Determines if a string contains a substring
+    /// @param str string
+    /// @param substr substring
+    /// @return true if string contains substring, false otherwise
+    bool contains(const char *str, const char *substr);
 }

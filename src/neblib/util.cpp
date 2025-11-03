@@ -44,3 +44,30 @@ double neblib::uniformRandom(double min, double max)
     std::uniform_real_distribution<double> dist(min, max);
     return dist(random_generator);
 }
+
+bool neblib::contains(const char *str, const char *substr)
+{
+    if (!str || !substr)
+        return false;
+
+    size_t lenSub = std::strlen(substr);
+    if (lenSub == 0)
+        return true;
+
+    for (; *str; ++str)
+    {
+        const char *h = str;
+        const char *n = substr;
+
+        while (*h && *n && std::tolower(static_cast<unsigned char>(*h)) == std::tolower(static_cast<unsigned char>(*n)))
+        {
+            ++h;
+            ++n;
+        }
+
+        if (*n == '\0')
+            return true;
+    }
+
+    return false;
+}
