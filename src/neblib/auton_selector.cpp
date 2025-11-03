@@ -41,7 +41,7 @@ void neblib::AutonSelector::drawButton(const neblib::Button &button)
     int h = brain.Screen.getStringHeight(button.text);
     int w = brain.Screen.getStringWidth(button.text);
     brain.Screen.setPenColor(button.textColor);
-    brain.Screen.printAt(button.x + button.width / 2 - w / 2, button.y + button.height / 2 - h / 2, button.text);
+    brain.Screen.printAt(button.x + button.width / 2 - w / 2, button.y + button.height / 2 + h / 2, button.text);
 }
 
 void neblib::AutonSelector::runSelector()
@@ -49,6 +49,7 @@ void neblib::AutonSelector::runSelector()
     while (true)
     {
         // Draw
+        brain.Screen.clearScreen();
         for (auto &p : pages)
         {
             drawButton(p->pageButton);
@@ -58,6 +59,7 @@ void neblib::AutonSelector::runSelector()
                     drawButton(b);
             }
         }
+        drawButton(endButton);
         while (!brain.Screen.pressing())
             vex::task::sleep(2);
 
