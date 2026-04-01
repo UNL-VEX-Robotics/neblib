@@ -1,4 +1,4 @@
-#include "control_algorithms.hpp"
+#include "neblib/control_algorithms.hpp"
 
 neblib::PID::Gains::Gains(
     double kP,
@@ -22,7 +22,7 @@ neblib::PID::Behaviors::Behaviors(
 
 neblib::PID::ExitConditions::ExitConditions(
     double settleTolerance,
-    double settleTime,
+    int settleTime,
     int dtMS)
     : settleTolerance(settleTolerance),
       settleTime(settleTime),
