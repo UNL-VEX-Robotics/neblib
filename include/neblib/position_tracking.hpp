@@ -1,204 +1,140 @@
 #pragma once
-#include "vex.h"
-#include "neblib/devices.hpp"
-#include "neblib/util.hpp"
 
-#include <vector>
+#include "neblib/devices/tracker_wheel.hpp"
+#include "neblib/util.hpp"
+#include "vex.h"
 
 namespace neblib
 {
-
-    /// @brief Struct for holding pose of a robot (x, y, heading)
+    /// @brief Struct to store a robot's 'Pose'
+    ///
+    /// x: The 'x' position of the robot
+    /// y: The 'y' position of the robot
+    /// heading: The orientation of the robot
     struct Pose
     {
         double x;
         double y;
         double heading;
 
-        /// @brief Constructs a Pose object
-        /// @param x x position of a robot
-        /// @param y y position of a robot
-        /// @param heading heading of a robot
-        Pose(double x, double y, double heading);
-
-        Pose &operator+=(const Pose &other);
-    };
-
-    /// @brief Struct to contain a Point
-    struct Point
-    {
-        double x;
-        double y;
-
-        /// @brief Constructs a Point
+        /// @brief Creates a new Pose object
         /// @param x x position
         /// @param y y position
-        Point(double x, double y);
+        /// @param heading orientation
+        Pose(
+            double x,
+            double y,
+            double heading);
+
+        /// @brief Creates a new Pose object
+        ///
+        /// Sets 'x', 'y', and 'heading' to 0.0
+        Pose();
     };
 
-    /// @brief Struct to contain a Line
-    struct Line
-    {
-        Point p0;
-        Point p1;
-
-        /// @brief Constructs a Line
-        /// @param p0 initial point
-        /// @param p1 final point
-        Line(Point p0, Point p1);
-    };
-
-    /// @brief Base PositionTracking class used for pointers and references
+    /// @brief Base class to implement position tracking algorithms
     class PositionTracking
     {
     public:
-        // Pure virtual methods that need implemented.
         virtual ~PositionTracking() = default;
-        virtual neblib::Pose getPose() = 0;
-        virtual void setPose(double x, double y, double heading) = 0;
+
+        /// @brief Begins a self-contained loop to constantly update the Pose
+        ///
+        /// Designed to work best with neblib::launch_task()
+        ///
+        /// @return returns 0 when the loop ends
+        virtual int begin() = 0;
+
+        /// @brief Stops the self-contained update loop
+        virtual void stop() = 0;
+
+        /// @brief Calibrates the robot
+        virtual void calibrate() = 0;
+
+        /// @brief Sets the new pose of the robot
+        /// @param newPose new pose of the robot
+        virtual void setPose(Pose newPose) = 0;
+
+        /// @brief Sets the new pose of the robot
+        /// @param x 'x' position
+        /// @param y 'y' position
+        /// @param heading robot orientation
+        virtual void setPose(
+            double x,
+            double y,
+            double heading);
+
+        /// @brief Gets the current pose of the robot
+        /// @return neblib::Pose containing 'x', 'y', and orientation values
+        virtual Pose getPose() = 0;
     };
 
-    /// @brief Odometry class based on 5225 E-Pilons document: http://thepilons.ca/wp-content/uploads/2018/10/Tracking.pdf
+    /// @brief Position tracking using arcs to approximate robot movement
+    /// Based on 5225 E-Pilons document: http://thepilons.ca/wp-content/uploads/2018/10/Tracking.pdf
     class Odometry : public PositionTracking
     {
-    protected:
-        neblib::TrackerWheel &parallel;
-        neblib::TrackerWheel &perpendicular;
-        vex::inertial &imu;
-
-        double parallelOffset;
-        double perpendicularOffset;
-
-        neblib::Pose currentPose;
-
-        double previousRotation;
-        double previousParallel;
-        double previousPerpendicular;
-
-        /// @brief Gets the global change in position
-        /// @return neblib::Pose containing change in x, y, and heading
-        neblib::Pose getGlobalChange();
-
-    public:
-        /// @brief Creates an Odometry object
-        /// @param parallelWheel any neblib::TrackerWheel representing the wheel parallel with forwards movement
-        /// @param parallelOffset the offset from the turning center of the robot to the parallel wheel, in the same units as the wheel's diameter
-        /// @param perpendicularWheel any neblib::TrackerWheel representing the wheel perpendicular to forwards movement
-        /// @param perpendicularOffset the offset from the turning center of the robot to the perpendicular wheel, in the same units as the wheel's diameter
-        /// @param imu a vex::inertial object
-        Odometry(neblib::TrackerWheel &parallelWheel, double parallelOffset, neblib::TrackerWheel &perpendicularWheel, double perpendicularOffset, vex::inertial &imu);
-
-        /// @brief Updates the internally stored pose and returns updated value
-        /// @return updated neblib::Pose holding x, y, and heading
-        neblib::Pose updatePose();
-
-        /// @brief Gets the internally stored pose
-        /// @return neblib::Pose holding x, y, and heading
-        neblib::Pose getPose() override;
-
-        /// @brief Sets the robot's pose to a desired pose
-        /// @param x desired x position
-        /// @param y desired y position
-        /// @param heading desired heading value in degrees
-        void setPose(double x, double y, double heading) override;
-
-        /// @brief Calibrates the imu
-        /// @param timeout a timeout before the calibration stops if not complete
-        void calibrate(double timeout = infinity());
-    };
-
-    class MCL : public PositionTracking
-    {
     private:
-        /// @brief Struct to represent a Particle
-        struct Particle
-        {
-            Pose pose;
-            double weight;
-
-            /// @brief Constructs a particle using a referenced position
-            /// @param x desired x
-            /// @param y desired y
-            /// @param heading desired heading
-            /// @param noise sensor noise
-            Particle(double x, double y, double heading, double noise);
-
-            /// @brief Constructs a particle in a random position
-            Particle();
-
-            /// @brief Sets the pose of the particle with noise
-            /// @param x x position
-            /// @param y y position
-            /// @param heading heading
-            /// @param noise noise
-            void setPose(double x, double y, double heading, double noise);
-
-            /// @brief Sets the particle's pose
-            /// @param x x position
-            /// @param y y position
-            /// @param heading heading
-            void setPose(double x, double y, double heading);
-
-            /// @brief Calculates what the sensor values would be at the given particle
-            /// @param obstacles std::vector of particles represented by Lines
-            /// @param sensors std::vector of sensors
-            /// @return std::vector<double> containing the same number of distance values as there are sensors
-            std::vector<double> calculateDistances(const std::vector<Line> &obstacles, const std::vector<neblib::Ray*> &sensors);
-
-            /// @brief Assigns the weight to the particle
-            /// @param obstacles std::vector of particles represented by Lines
-            /// @param sensors std::vector of sensors
-            /// @param actualReadings std::vector<double> of the actual sensor readings
-            /// @param stddev standard deviation
-            /// @return the new weight of the particle
-            double assignWeight(const std::vector<Line> &obstacles, const std::vector<neblib::Ray*> &sensors, const std::vector<double> &actualReadings, double stddev);
-        };
-
-        // devices
-        std::vector<Ray*> sensors;
-        std::unique_ptr<TrackerWheel> parallelWheel;
-        std::unique_ptr<TrackerWheel> perpendicularWheel;
+        // ---------- Devices ----------
+        neblib::TrackerWheel &parallelTrackerWheel;
+        neblib::TrackerWheel &perpendicularTrackerWheel;
         vex::inertial &imu;
 
-        // MCL
-        std::vector<Particle> particles;
-        std::vector<Line> obstacles;
-        Pose estimate;
-        double stddev;
-        double noise;
+        // ---------- Configuration ----------
+        double parallelDistance;
+        double perpendicularDistance;
 
-        // Tracking
-        double parallelOffset;
-        double perpendicularOffset;
-        double previousPerpendicular;
+        // ---------- State ----------
+        vex::mutex mutex;
+        Pose position;
+        bool running;
         double previousParallel;
+        double previousPerpendicular;
         double previousRotation;
 
     public:
-        /// @brief Creates an MCL object
-        /// @param sensors vector of unique pointers to Ray objects
-        /// @param parallel unique pointer to tracker wheel object
-        /// @param parallelOffset parallel offset from center
-        /// @param perpendicular unique pointer to tracker wheel object
-        /// @param perpendicularOffset perpendicular offset from center
-        /// @param imu inertial sensor
-        /// @param numParticles number of particles
-        /// @param obstacles vector of lines representing obstacles
-        /// @param stddev standard deviation for sensor measurements
-        /// @param noise added noise
-        MCL(std::vector<neblib::Ray*> sensors, std::unique_ptr<TrackerWheel> parallel, double parallelOffset, std::unique_ptr<TrackerWheel> perpendicular, double perpendicularOffset, vex::inertial &imu, int numParticles, std::vector<Line> obstacles, double stddev, double noise);
+        /// @brief Constructs an Odometry object
+        /// @param parallelTrackerWheel tracker wheel parallel to the forward movement of the robot
+        /// @param parallelDistance distance from the turning center to the center of the wheel, right is positive
+        /// @param perpendicularTrackerWheel tracker wheel perpendicular to the forward movement of the robot
+        /// @param perpendicularDistance distance from the turning center to the center of the wheel, back is positive
+        /// @param imu VEX V5 Inertial sensor
+        Odometry(
+            neblib::TrackerWheel &parallelTrackerWheel,
+            double parallelDistance,
+            neblib::TrackerWheel &perpendicularTrackerWheel,
+            double perpendicularDistance,
+            vex::inertial &imu);
 
-        /// @brief Updates the MCL
-        void update();
+        /// @brief Begins a self-contained loop to constantly update the Pose
+        ///
+        /// Designed to work best with neblib::launch_task()
+        ///
+        /// @return returns 0 when the loop ends
+        int begin() override;
 
-        /// @brief Gets the Pose estimate
-        /// @return Pose
+        /// @brief Stops the self-contained update loop
+        void stop() override;
+
+        /// @brief Calibrates the robot
+        /// Blocks until the robot has calibrated
+        void calibrate() override;
+
+        /// @brief Sets the new pose of the robot
+        /// @param newPose new pose of the robot
+        void setPose(Pose newPose) override;
+
+        /// @brief Sets the new pose of the robot
+        /// @param x 'x' position
+        /// @param y 'y' position
+        /// @param heading robot orientation
+        void setPose(
+            double x,
+            double y,
+            double heading) override;
+
+        /// @brief Gets the current pose of the robot
+        /// @return neblib::Pose containing 'x', 'y', and orientation values
         Pose getPose() override;
-
-        /// @brief Sets the pose of the robot
-        /// @param x x position
-        /// @param y y position
-        /// @param heading heading
-        void setPose(double x, double y, double heading) override;
     };
-}
+
+} // namespace neblib
