@@ -30,7 +30,7 @@ namespace neblib
     class RotationTrackerWheel : public TrackerWheel
     {
     private:
-        vex::rotation *rotation;
+        vex::rotation &rotation;
         double wheelDiameter;
 
     public:
@@ -38,7 +38,7 @@ namespace neblib
         /// @param rotation VEX Rotation sensor
         /// @param wheelDiameter diameter of the trackerwheel
         RotationTrackerWheel(
-            vex::rotation *rotation,
+            vex::rotation &rotation,
             double wheelDiameter);
 
         /// @brief Gets the position of the tracker wheel
