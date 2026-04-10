@@ -1,164 +1,240 @@
 #include "neblib/xdrive.hpp"
 
-neblib::XDrive::XDrive(vex::motor_group &&frontLeft, vex::motor_group &&frontRight, vex::motor_group &&backLeft, vex::motor_group &&backRight, PositionTracking* positionTracking, vex::inertial &imu) : frontLeft(frontLeft), frontRight(frontRight), backLeft(backLeft), backRight(backRight), positionTracking(std::move(positionTracking)), imu(imu), turnPID(nullptr), linearPID(nullptr), rotationalPID(nullptr)
+neblib::XDrive::XDrive(
+    vex::motor_group &leftFront,
+    vex::motor_group &rightFront,
+    vex::motor_group &leftBack,
+    vex::motor_group &rightBack,
+    vex::inertial &imu,
+    neblib::PositionTracking *positionTracking)
+    : leftFront(leftFront),
+      rightFront(rightFront),
+      leftBack(leftBack),
+      rightBack(rightBack),
+      imu(imu),
+      positionTracking(positionTracking),
+      linearController(nullptr),
+      angularController(nullptr)
 {
 }
 
-void neblib::XDrive::setTurnPID(neblib::PID& pid)
+void neblib::XDrive::setLinearController(neblib::FeedbackController *linearController)
 {
-    turnPID = &pid;
+    this->linearController = linearController;
 }
 
-void neblib::XDrive::setLinearPID(neblib::PID& pid)
+void neblib::XDrive::setAngularController(neblib::FeedbackController *angularController)
 {
-    linearPID = &pid;
+    this->angularController = angularController;
 }
 
-void neblib::XDrive::setRotationalPID(neblib::PID& pid)
+void neblib::XDrive::driveLocal(
+    double drive,
+    double strafe,
+    double turn,
+    vex::velocityUnits unit)
 {
-    rotationalPID = &pid;
+    leftFront.spin(vex::directionType::fwd, drive + strafe + turn, unit);
+    rightFront.spin(vex::directionType::fwd, drive - strafe - turn, unit);
+    leftBack.spin(vex::directionType::fwd, drive - strafe + turn, unit);
+    rightBack.spin(vex::directionType::fwd, drive + strafe - turn, unit);
 }
 
-void neblib::XDrive::driveLocal(double drive, double strafe, double turn, vex::velocityUnits unit)
+void neblib::XDrive::driveLocal(
+    double drive,
+    double strafe,
+    double turn,
+    vex::voltageUnits unit)
 {
-    frontLeft.spin(vex::directionType::fwd, drive + strafe + turn, unit);
-    frontRight.spin(vex::directionType::fwd, drive - strafe - turn, unit);
-    backLeft.spin(vex::directionType::fwd, drive - strafe + turn, unit);
-    backRight.spin(vex::directionType::fwd, drive + strafe - turn, unit);
+    leftFront.spin(vex::directionType::fwd, drive + strafe + turn, unit);
+    rightFront.spin(vex::directionType::fwd, drive - strafe - turn, unit);
+    leftBack.spin(vex::directionType::fwd, drive - strafe + turn, unit);
+    rightBack.spin(vex::directionType::fwd, drive + strafe - turn, unit);
 }
 
-void neblib::XDrive::driveLocal(double drive, double strafe, double turn, vex::voltageUnits unit)
+void neblib::XDrive::driveAngle(
+    double drive,
+    double angle,
+    double turn,
+    vex::velocityUnits unit)
 {
-    frontLeft.spin(vex::directionType::fwd, drive + strafe + turn, unit);
-    frontRight.spin(vex::directionType::fwd, drive - strafe - turn, unit);
-    backLeft.spin(vex::directionType::fwd, drive - strafe + turn, unit);
-    backRight.spin(vex::directionType::fwd, drive + strafe - turn, unit);
+    const double radians = neblib::toRad(angle);
+    driveLocal(
+        drive * cos(radians),
+        drive * sin(radians),
+        turn,
+        unit);
 }
 
-void neblib::XDrive::driveAngle(double velocity, double deg, double turn, vex::velocityUnits unit)
+void neblib::XDrive::driveAngle(
+    double drive,
+    double angle,
+    double turn,
+    vex::voltageUnits unit)
 {
-    double x = velocity * cosf(neblib::toRad(deg));
-    double y = velocity * sinf(neblib::toRad(deg));
-
-    this->driveLocal(y, x, turn, unit);
+    const double radians = neblib::toRad(angle);
+    driveLocal(
+        drive * cos(radians),
+        drive * sin(radians),
+        turn,
+        unit);
 }
 
-void neblib::XDrive::driveAngle(double velocity, double deg, double turn, vex::voltageUnits unit)
+void neblib::XDrive::driveGlobal(
+    double x,
+    double y,
+    double turn,
+    vex::velocityUnits unit)
 {
-    double x = velocity * cosf(neblib::toRad(deg));
-    double y = velocity * sinf(neblib::toRad(deg));
-
-    this->driveLocal(y, x, turn, unit);
+    driveAngle(
+        hypot(y, x),
+        90 - imu.heading() + neblib::toDeg(atan2(y, x)),
+        turn,
+        unit);
 }
 
-void neblib::XDrive::driveGlobal(double x, double y, double turn, vex::velocityUnits unit)
+void neblib::XDrive::driveGlobal(
+    double x,
+    double y,
+    double turn,
+    vex::voltageUnits unit)
 {
-    this->driveAngle(hypot(x, y), neblib::toDeg(atan2f(x, y)) + imu.heading(vex::rotationUnits::deg) - 90, turn, unit);
+    driveAngle(
+        hypot(y, x),
+        90 - imu.heading() + neblib::toDeg(atan2(y, x)),
+        turn,
+        unit);
 }
 
-void neblib::XDrive::driveGlobal(double x, double y, double turn, vex::voltageUnits unit)
+void neblib::XDrive::stop(vex::brakeType brakeType)
 {
-    this->driveAngle(hypotf(x, y), neblib::toDeg(atan2f(x, y)) + imu.heading(vex::rotationUnits::deg) - 90, turn, unit);
+    leftFront.stop(brakeType);
+    rightFront.stop(brakeType);
+    leftBack.stop(brakeType);
+    rightBack.stop(brakeType);
 }
 
-void neblib::XDrive::stop(vex::brakeType stopType)
+int neblib::XDrive::driveToPose(
+    double x,
+    double y,
+    double heading,
+    int timeout,
+    double minOutput,
+    double maxOutput)
 {
-    frontLeft.stop(stopType);
-    frontRight.stop(stopType);
-    backLeft.stop(stopType);
-    backRight.stop(stopType);
-}
+    if (!positionTracking)
+        return -1;
+    if (!linearController)
+        return -2;
 
-double neblib::XDrive::turnFor(double deg, double minOutput, double maxOutput, double timeout)
-{
-    turnPID->reset();
-    double target = imu.rotation(vex::rotationUnits::deg) + deg;
-    double time = 0.0;
+    linearController->reset();
+    if (angularController)
+        angularController->reset();
+    int time = 0;
 
-    while (!turnPID->isSettled() && time < timeout)
+    while (!linearController->isSettled() && time < timeout)
     {
-        double error = target - imu.rotation(vex::rotationUnits::deg);
-        double output = turnPID->getOutput(error, minOutput, maxOutput);
+        const neblib::Pose currentPose = positionTracking->getPose();
+        const double drive = linearController->getOutput(
+            hypot(x - currentPose.x, y - currentPose.y),
+            minOutput,
+            maxOutput);
+        double turn = 0.0;
+        if (angularController)
+            turn = angularController->getOutput(
+                neblib::wrap(heading - imu.heading(), -180.0, 180.0),
+                minOutput,
+                maxOutput);
+        const double angle = atan2(y - currentPose.y, x - currentPose.x);
 
-        this->driveLocal(0.0, 0.0, output, vex::voltageUnits::volt);
-
+        driveGlobal(drive * cos(angle), drive * -sin(angle), turn, vex::voltageUnits::volt);
+        time += 10;
         vex::task::sleep(10);
-        time += 0.01;
     }
 
-    this->stop(vex::brakeType::hold);
-
+    stop(vex::brakeType::hold);
     return time;
 }
 
-double neblib::XDrive::turnFor(double deg, double timeout)
+int neblib::XDrive::driveTo(
+    double x,
+    double y,
+    int timeout,
+    double minOutput,
+    double maxOutput)
 {
-    return this->turnFor(deg, -infinity(), infinity(), timeout);
+    return driveToPose(
+        x,
+        y,
+        imu.heading(),
+        timeout,
+        minOutput,
+        maxOutput);
 }
 
-double neblib::XDrive::turnTo(double heading, double minOutput, double maxOutput, double timeout)
+int neblib::XDrive::turnFor(
+    double degrees,
+    int timeout,
+    double minOutput,
+    double maxOutput)
 {
-    turnPID->reset();
-    double time = 0.0;
+    if (!angularController)
+        return -1;
 
-    while (!turnPID->isSettled() && time < timeout)
+    angularController->reset();
+    int time = 0;
+    double target = imu.rotation() + degrees;
+
+    while (!angularController->isSettled() && time < timeout)
     {
-        double error = neblib::wrap(heading - imu.heading(vex::rotationUnits::deg), -180, 180);
-        double output = turnPID->getOutput(error, minOutput, maxOutput);
+        const double output = angularController->getOutput(
+            target - imu.rotation(),
+            minOutput,
+            maxOutput);
 
-        this->driveLocal(0.0, 0.0, output, vex::voltageUnits::volt);
+        driveLocal(
+            0.0,
+            0.0,
+            output,
+            vex::voltageUnits::volt);
 
+        time += 10;
         vex::task::sleep(10);
-        time += 0.01;
     }
 
-    this->stop(vex::brakeType::hold);
-
+    stop(vex::brakeType::hold);
     return time;
 }
 
-double neblib::XDrive::turnTo(double heading, double timeout)
+int neblib::XDrive::turnTo(
+    double heading,
+    int timeout,
+    double minOutput,
+    double maxOutput)
 {
-    return this->turnTo(heading, -infinity(), infinity(), timeout);
-}
+    if (!angularController)
+        return -1;
 
-double neblib::XDrive::driveTo(double x, double y, double minOutput, double maxOutput, double timeout)
-{
-    return this->driveToPose(x, y, imu.heading(vex::rotationUnits::deg), minOutput, maxOutput, timeout);
-}
+    angularController->reset();
+    int time = 0;
 
-double neblib::XDrive::driveTo(double x, double y, double timeout)
-{
-    return this->driveToPose(x, y, imu.heading(vex::rotationUnits::deg), -infinity(), infinity(), timeout);
-}
-
-double neblib::XDrive::driveToPose(double x, double y, double heading, double minOutput, double maxOutput, double timeout)
-{
-    
-    linearPID->reset();
-    rotationalPID->reset();
-    double time = 0;
-
-    while ((!linearPID->isSettled() || !rotationalPID->isSettled()) && time < timeout)
+    while (!angularController->isSettled() && time < timeout)
     {
-        
-        neblib::Pose currentPose = positionTracking->getPose();
-        double linearOutput = linearPID->getOutput(hypotf(x - currentPose.x, y - currentPose.y), minOutput, maxOutput);
-        double rotationalOutput = rotationalPID->getOutput(neblib::wrap(heading - imu.heading(vex::rotationUnits::deg), -180, 180));
+        const double output = angularController->getOutput(
+            neblib::wrap(heading - imu.heading(), -180.0, 180.0),
+            minOutput,
+            maxOutput);
 
-        double driveAngle = atan2f(y - currentPose.y, x - currentPose.x);
-        this->driveGlobal(linearOutput * cosf(driveAngle), linearOutput * -sinf(driveAngle), rotationalOutput, vex::voltageUnits::volt);
+        driveLocal(
+            0.0,
+            0.0,
+            output,
+            vex::voltageUnits::volt);
 
+        time += 10;
         vex::task::sleep(10);
-        time += 0.01;
     }
 
-    this->stop(vex::brakeType::hold);
-
+    stop(vex::brakeType::hold);
     return time;
-}
-
-double neblib::XDrive::driveToPose(double x, double y, double heading, double timeout)
-{
-    return this->driveToPose(x, y, heading, -infinity(), infinity(), timeout);
 }

@@ -53,8 +53,13 @@ int neblib::Odometry::begin()
         const double rotationChange = rotation - previousRotation;
 
         // ---------- Calculate Local Position ----------
-        const double localX = 2.0 * sin(rotationChange / 2.0) * ((perpendicularChange / rotationChange) + perpendicularDistance);
-        const double localY = 2.0 * sin(rotationChange / 2.0) * ((parallelChange / rotationChange) + parallelDistance);
+        double localX = perpendicularChange;
+        double localY = parallelChange;
+        if (std::abs(rotationChange) > 1e-6)
+        {
+            localX = 2.0 * sin(rotationChange / 2.0) * ((perpendicularChange / rotationChange) + perpendicularDistance);
+            localY = 2.0 * sin(rotationChange / 2.0) * ((parallelChange / rotationChange) + parallelDistance);
+        }
         const double averageRotation = previousRotation + (rotationChange / 2.0);
 
         // ---------- Calculate Local Polar Coordinate ----------
@@ -104,6 +109,8 @@ void neblib::Odometry::setPose(Pose newPose)
     mutex.lock();
     position = newPose;
     imu.setHeading(newPose.heading, vex::rotationUnits::deg);
+    imu.setRotation(newPose.heading, vex::rotationUnits::deg);
+    previousRotation = neblib::toRad(newPose.heading);
     mutex.unlock();
 }
 
@@ -115,6 +122,8 @@ void neblib::Odometry::setPose(
     mutex.lock();
     position = Pose(x, y, heading);
     imu.setHeading(heading, vex::rotationUnits::deg);
+    imu.setRotation(heading, vex::rotationUnits::deg);
+    previousRotation = neblib::toRad(heading);
     mutex.unlock();
 }
 
