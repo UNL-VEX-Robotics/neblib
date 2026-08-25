@@ -1,8 +1,9 @@
 #pragma once
 
+#include <limits>
 #include "vex.h"
 #include "neblib/position_tracking.hpp"
-#include "neblib/pid.hpp"
+#include "neblib/control_algorithms.hpp"
 
 namespace neblib 
 {
@@ -37,21 +38,21 @@ namespace neblib
 
         void stop(vex::brakeType stopType = vex::brakeType::hold);
 
-        double turnFor(double degrees, double minOutput, double maxOutput, double timeout = infinity());
-        double turnFor(double degrees, double timeout = infinity());
-        double turnTo(double heading, double minOutput, double maxOutput, double timeout = infinity());
-        double turnTo(double heading, double timeout = infinity());
+        int turnFor(double degrees, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int turnFor(double degrees, int timeout = std::numeric_limits<int>::max());
+        int turnTo(double heading, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int turnTo(double heading, int timeout = std::numeric_limits<int>::max());
 
-        double driveFor(double distance, double heading, double minOutput, double maxOutput, double timeout = infinity());
-        double driveFor(double distance, double minOutput, double maxOutput, double timeout = infinity());
-        double driveFor(double distance, double heading, double timeout = infinity());
-        double driveFor(double distance, double timeout = infinity());
+        int driveFor(double distance, double heading, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int driveFor(double distance, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int driveFor(double distance, double heading, int timeout = std::numeric_limits<int>::max());
+        int driveFor(double distance, int timeout = std::numeric_limits<int>::max());
 
-        double swingFor(vex::turnType direction, double degrees, double minOutput, double maxOutput, double timeout = infinity());
-        double swingFor(vex::turnType direction, double degrees, double timeout = infinity());
-        double swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double minOutput, double maxOutput, double timeout = infinity());
-        double swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double timeout = infinity());
-        double swingTo(vex::turnType turnDirection, double heading, double minOutput, double maxOutput, double timeout = infinity());
-        double swingTo(vex::turnType turnDirection, double heading, double timeout = infinity());
+        int swingFor(vex::turnType direction, double degrees, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int swingFor(vex::turnType direction, double degrees, int timeout = std::numeric_limits<int>::max());
+        int swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, int timeout = std::numeric_limits<int>::max());
+        int swingTo(vex::turnType turnDirection, double heading, double minOutput, double maxOutput, int timeout = std::numeric_limits<int>::max());
+        int swingTo(vex::turnType turnDirection, double heading, int timeout = std::numeric_limits<int>::max());
     };
 }
