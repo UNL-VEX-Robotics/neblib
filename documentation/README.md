@@ -17,9 +17,10 @@ The documentation should be read alongside the header files in [`include/neblib`
 ## Documentation Topics
 
 - [`util.md`](neblib/util.md) documents general-purpose utilities.
+- [`position_tracking.md`](neblib/position_tracking.md) explains poses, tracker-wheel setup, and odometry.
 - [`documentation.md`](neblib/documentation.md) describes documentation-related conventions and guidance.
 
-More pages will be added as the library is documented. Planned topics include control algorithms, position tracking, drive systems, autonomous selection, and device helpers.
+More pages will be added as the library is documented. Planned topics include control algorithms, drive systems, autonomous selection, and device helpers.
 
 ## Who This Documentation Is For
 
