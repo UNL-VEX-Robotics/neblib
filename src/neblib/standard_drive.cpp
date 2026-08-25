@@ -54,11 +54,11 @@ void neblib::StandardDrive::stop(vex::brakeType stopType)
     rightMotors.stop(stopType);
 }
 
-double neblib::StandardDrive::turnFor(double degrees, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::turnFor(double degrees, double minOutput, double maxOutput, int timeout)
 {
     turnPID->reset();
     double target = imu.rotation(vex::rotationUnits::deg) + degrees;
-    double time = 0.0;
+    int time = 0;
 
     while (!turnPID->isSettled() && time < timeout)
     {
@@ -69,7 +69,7 @@ double neblib::StandardDrive::turnFor(double degrees, double minOutput, double m
         rightMotors.spin(vex::directionType::rev, output, vex::voltageUnits::volt);
 
         vex::task::sleep(10);
-        time += 0.01;
+        time += 10;
     }
 
     this->stop(vex::brakeType::hold);
@@ -77,15 +77,15 @@ double neblib::StandardDrive::turnFor(double degrees, double minOutput, double m
     return time;
 }
 
-double neblib::StandardDrive::turnFor(double degrees, double timeout)
+int neblib::StandardDrive::turnFor(double degrees, int timeout)
 {
     return this->turnFor(degrees, -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::turnTo(double heading, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::turnTo(double heading, double minOutput, double maxOutput, int timeout)
 {
     turnPID->reset();
-    double time = 0.0;
+    int time = 0;
 
     while (!turnPID->isSettled() && time < timeout)
     {
@@ -96,7 +96,7 @@ double neblib::StandardDrive::turnTo(double heading, double minOutput, double ma
         rightMotors.spin(vex::directionType::rev, output, vex::voltageUnits::volt);
 
         vex::task::sleep(10);
-        time += 0.01;
+        time += 10;
     }
 
     this->stop(vex::brakeType::hold);
@@ -104,18 +104,18 @@ double neblib::StandardDrive::turnTo(double heading, double minOutput, double ma
     return time;
 }
 
-double neblib::StandardDrive::turnTo(double heading, double timeout)
+int neblib::StandardDrive::turnTo(double heading, int timeout)
 {
     return this->turnTo(heading, -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::driveFor(double distance, double heading, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::driveFor(double distance, double heading, double minOutput, double maxOutput, int timeout)
 {
     linearPID->reset();
     angularPID->reset();
 
     double target = parallelTrackerWheel.getPosition() + distance;
-    double time = 0.0;
+    int time = 0;
 
     while (!linearPID->isSettled() && time < timeout)
     {
@@ -128,7 +128,7 @@ double neblib::StandardDrive::driveFor(double distance, double heading, double m
         rightMotors.spin(vex::directionType::fwd, linearOutput - angularOutput, vex::voltageUnits::volt);
 
         vex::task::sleep(10);
-        time += 0.01;
+        time += 10;
     }
 
     this->stop(vex::brakeType::hold);
@@ -136,25 +136,25 @@ double neblib::StandardDrive::driveFor(double distance, double heading, double m
     return time;
 }
 
-double neblib::StandardDrive::driveFor(double distance, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::driveFor(double distance, double minOutput, double maxOutput, int timeout)
 {
     return this->driveFor(distance, imu.heading(vex::rotationUnits::deg), minOutput, maxOutput, timeout);
 }
 
-double neblib::StandardDrive::driveFor(double distance, double heading, double timeout)
+int neblib::StandardDrive::driveFor(double distance, double heading, int timeout)
 {
     return this->driveFor(distance, heading, -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::driveFor(double distance, double timeout)
+int neblib::StandardDrive::driveFor(double distance, int timeout)
 {
     return this->driveFor(distance, imu.heading(vex::rotationUnits::deg), -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, double minOutput, double maxOutput, int timeout)
 {
     swingPID->reset();
-    double time = 0.0;
+    int time = 0;
     if (direction == vex::turnType::right)
     {
         double target = imu.rotation(vex::rotationUnits::deg) + degrees;
@@ -168,7 +168,7 @@ double neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, 
             leftMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     } else {
         double target = imu.rotation(vex::rotationUnits::deg) - degrees;
@@ -182,7 +182,7 @@ double neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, 
             rightMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     }
 
@@ -191,15 +191,15 @@ double neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, 
     return time;
 }
 
-double neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, double timeout)
+int neblib::StandardDrive::swingFor(vex::turnType direction, double degrees, int timeout)
 {
     return this->swingFor(direction, degrees, -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double minOutput, double maxOutput, int timeout)
 {
     swingPID->reset();
-    double time = 0.0;
+    int time = 0;
     if (turnDirection == vex::turnType::right)
     {
         double lower = (direction == vex::directionType::fwd) ? 0.0 : -360.0;
@@ -213,7 +213,7 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directio
             leftMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     } else {
         double lower = (direction == vex::directionType::fwd) ? 0.0 : -360.0;
@@ -227,7 +227,7 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directio
             rightMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     }
 
@@ -236,15 +236,15 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directio
     return time;
 }
 
-double neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, double timeout)
+int neblib::StandardDrive::swingTo(vex::turnType turnDirection, vex::directionType direction, double heading, int timeout)
 {
     return this->swingTo(turnDirection, direction, heading, -infinity(), infinity(), timeout);
 }
 
-double neblib::StandardDrive::swingTo(vex::turnType turnDirection, double heading, double minOutput, double maxOutput, double timeout)
+int neblib::StandardDrive::swingTo(vex::turnType turnDirection, double heading, double minOutput, double maxOutput, int timeout)
 {
     swingPID->reset();
-    double time = 0.0;
+    int time = 0;
     if (turnDirection == vex::turnType::right)
     {
         while (!swingPID->isSettled() && time < timeout)
@@ -256,7 +256,7 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, double headin
             leftMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     } else {
         while (!swingPID->isSettled() && time < timeout)
@@ -268,7 +268,7 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, double headin
             rightMotors.spin(vex::directionType::fwd, output, vex::voltageUnits::volt);
 
             vex::task::sleep(10);
-            time += 0.01;
+            time += 10;
         }
     }
 
@@ -277,7 +277,7 @@ double neblib::StandardDrive::swingTo(vex::turnType turnDirection, double headin
     return time;
 }
 
-double neblib::StandardDrive::swingTo(vex::turnType turnDirection, double heading, double timeout)
+int neblib::StandardDrive::swingTo(vex::turnType turnDirection, double heading, int timeout)
 {
     return this->swingTo(turnDirection, heading, -infinity(), infinity(), timeout);
 }
