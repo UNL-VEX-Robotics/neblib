@@ -2,5 +2,5 @@
 
 neblib::Point::Point(double x, double y):
     x(x),
-    y(x)
+    y(y)
 {}
