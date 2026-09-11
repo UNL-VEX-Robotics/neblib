@@ -16,12 +16,12 @@ namespace neblib
         class Button
         {
         private:
-            std::unique_ptr<Shape> shape;
+            std::unique_ptr<neblib::Shapes::Shape> shape;
             vex::color pressedColor;
             vex::color color;
 
         public:
-            Button(std::unique_ptr<neblib::Shape> shape, vex::color pressedColor);
+            Button(std::unique_ptr<neblib::Shapes::Shape> shape, vex::color pressedColor);
             void draw();
             void setColors(vex::color fillColor, vex::color pressedColor);
             bool pressing();

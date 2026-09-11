@@ -6,7 +6,7 @@
 #include "neblib/geometry.hpp"
 #include "vex.h"
 
-namespace neblib
+namespace neblib::Shapes
 {
 
     class Shape

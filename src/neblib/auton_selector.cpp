@@ -1,7 +1,7 @@
 #include "neblib/auton_selector.hpp"
 
 neblib::AutonomousSelector::Button::Button(
-    std::unique_ptr<neblib::Shape> shape,
+    std::unique_ptr<neblib::Shapes::Shape> shape,
     vex::color pressedColor)
     : shape(std::move(shape)),
       pressedColor(pressedColor)
@@ -47,7 +47,7 @@ void neblib::AutonomousSelector::calibrate()
 }
 
 neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
-    : leftArrow(std::unique_ptr<neblib::Shape>(new neblib::Triangle(
+    : leftArrow(std::unique_ptr<neblib::Shapes::Shape>(new neblib::Shapes::Triangle(
                     neblib::Point(1, 50),
                     neblib::Point(85, 0),
                     neblib::Point(85, 100),
@@ -55,7 +55,7 @@ neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
                     vex::color(0, 0, 0),
                     vex::color(0, 255, 0))),
                 vex::color(0, 175, 0)),
-      rightArrow(std::unique_ptr<neblib::Shape>(new neblib::Triangle(
+      rightArrow(std::unique_ptr<neblib::Shapes::Shape>(new neblib::Shapes::Triangle(
                      neblib::Point(479, 50),
                      neblib::Point(395, 0),
                      neblib::Point(395, 100),
@@ -63,7 +63,7 @@ neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
                      vex::color(0, 0, 0),
                      vex::color(0, 255, 0))),
                  vex::color(0, 175, 0)),
-      colorButton(std::unique_ptr<neblib::Shape>(new neblib::Rectangle(
+      colorButton(std::unique_ptr<neblib::Shapes::Shape>(new neblib::Shapes::Rectangle(
                       neblib::Point(20, 120),
                       neblib::Point(230, 225),
                       5,
@@ -73,7 +73,7 @@ neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
                       "Color",
                       vex::fontType::mono30)),
                   vex::color(175, 0, 0)),
-      calibrateButton(std::unique_ptr<neblib::Shape>(new neblib::Rectangle(
+      calibrateButton(std::unique_ptr<neblib::Shapes::Shape>(new neblib::Shapes::Rectangle(
                           neblib::Point(250, 120),
                           neblib::Point(460, 225),
                           5,
@@ -158,7 +158,8 @@ void neblib::AutonomousSelector::run()
         // Wait until the screen is released or 0.5 seconds to retrigger
         for (int i = 0; i < 5000; i += 10)
         {
-            if (!Brain.Screen.pressing()) break;
+            if (!Brain.Screen.pressing())
+                break;
             vex::task::sleep(10);
         }
     }

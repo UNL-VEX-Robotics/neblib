@@ -1,6 +1,6 @@
 #include "neblib/shapes.hpp"
 
-neblib::Rectangle::Rectangle(
+neblib::Shapes::Rectangle::Rectangle(
     neblib::Point p0,
     neblib::Point p1,
     int lineWidth,
@@ -20,7 +20,7 @@ neblib::Rectangle::Rectangle(
 {
 }
 
-neblib::Rectangle::Rectangle(
+neblib::Shapes::Rectangle::Rectangle(
     neblib::Point p0,
     neblib::Point p1,
     int lineWidth,
@@ -37,12 +37,12 @@ neblib::Rectangle::Rectangle(
 {
 }
 
-void neblib::Rectangle::setFillColor(vex::color color)
+void neblib::Shapes::Rectangle::setFillColor(vex::color color)
 {
     fillColor = color;
 }
 
-void neblib::Rectangle::draw()
+void neblib::Shapes::Rectangle::draw()
 {
     Brain.Screen.setPenWidth(lineWidth);
     Brain.Screen.setPenColor(outlineColor);
@@ -65,12 +65,12 @@ void neblib::Rectangle::draw()
         text.c_str());
 }
 
-bool neblib::Rectangle::contains(neblib::Point point)
+bool neblib::Shapes::Rectangle::contains(neblib::Point point)
 {
     return (point.x >= p0.x) && (point.y >= p0.y) && (point.x <= p1.x) && (point.y <= p1.y);
 }
 
-neblib::Triangle::Triangle(
+neblib::Shapes::Triangle::Triangle(
     neblib::Point p0,
     neblib::Point p1,
     neblib::Point p2,
@@ -86,17 +86,17 @@ neblib::Triangle::Triangle(
 {
 }
 
-vex::color neblib::Rectangle::getFillColor()
+vex::color neblib::Shapes::Rectangle::getFillColor()
 {
     return fillColor;
 }
 
-void neblib::Triangle::setFillColor(vex::color color)
+void neblib::Shapes::Triangle::setFillColor(vex::color color)
 {
     fillColor = color;
 }
 
-void neblib::Triangle::draw()
+void neblib::Shapes::Triangle::draw()
 {
     const int minX = static_cast<int>(
         std::ceil(std::min({p0.x, p1.x, p2.x})));
@@ -129,7 +129,7 @@ void neblib::Triangle::draw()
     Brain.Screen.drawLine(p0.x, p0.y, p2.x, p2.y);
 }
 
-bool neblib::Triangle::contains(neblib::Point point)
+bool neblib::Shapes::Triangle::contains(neblib::Point point)
 {
     const auto cross = [](Point a, Point b, Point point) -> double
     {
@@ -150,7 +150,7 @@ bool neblib::Triangle::contains(neblib::Point point)
     return !(hasNegative && hasPositive);
 }
 
-vex::color neblib::Triangle::getFillColor()
+vex::color neblib::Shapes::Triangle::getFillColor()
 {
     return fillColor;
 }
