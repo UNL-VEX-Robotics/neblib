@@ -1,13 +1,13 @@
 #include "neblib/shapes.hpp"
 
 neblib::Rectangle::Rectangle(
-    neblib::Point p0, 
-    neblib::Point p1, 
-    int lineWidth, 
-    vex::color outlineColor, 
-    vex::color fillColor, 
-    vex::color textColor, 
-    std::string text, 
+    neblib::Point p0,
+    neblib::Point p1,
+    int lineWidth,
+    vex::color outlineColor,
+    vex::color fillColor,
+    vex::color textColor,
+    std::string text,
     vex::fontType font)
     : p0(std::min(p0.x, p1.x), std::min(p0.y, p1.y)),
       p1(std::max(p0.x, p1.x), std::max(p0.y, p1.y)),
@@ -21,10 +21,10 @@ neblib::Rectangle::Rectangle(
 }
 
 neblib::Rectangle::Rectangle(
-    neblib::Point p0, 
-    neblib::Point p1, 
-    int lineWidth, 
-    vex::color outlineColor, 
+    neblib::Point p0,
+    neblib::Point p1,
+    int lineWidth,
+    vex::color outlineColor,
     vex::color fillColor)
     : p0(std::min(p0.x, p1.x), std::min(p0.y, p1.y)),
       p1(std::max(p0.x, p1.x), std::max(p0.y, p1.y)),
@@ -37,16 +37,19 @@ neblib::Rectangle::Rectangle(
 {
 }
 
+void neblib::Rectangle::setFillColor(vex::color color)
+{
+    fillColor = color;
+}
+
 void neblib::Rectangle::draw()
 {
     Brain.Screen.setPenWidth(lineWidth);
     Brain.Screen.setPenColor(outlineColor);
     Brain.Screen.setFillColor(fillColor);
 
-    int x = std::min(p0.x, p1.x);
-
     Brain.Screen.drawRectangle(
-        p0.x, 
+        p0.x,
         p0.y,
         p1.x - p0.x,
         p1.y - p0.y);
@@ -55,9 +58,10 @@ void neblib::Rectangle::draw()
     Brain.Screen.setPenColor(textColor);
     auto textWidth = Brain.Screen.getStringWidth(text.c_str());
     auto textHeight = Brain.Screen.getStringHeight(text.c_str());
+
     Brain.Screen.printAt(
-        ((p1.x - p0.x) / 2) + p0.x - (textWidth / 2), 
-        ((p1.y - p0.y) / 2) + p0.y + (textHeight / 4), 
+        ((p1.x - p0.x) / 2) + p0.x - (textWidth / 2),
+        ((p1.y - p0.y) / 2) + p0.y + (textHeight / 4),
         text.c_str());
 }
 
@@ -67,11 +71,11 @@ bool neblib::Rectangle::contains(neblib::Point point)
 }
 
 neblib::Triangle::Triangle(
-    neblib::Point p0, 
-    neblib::Point p1, 
-    neblib::Point p2, 
-    int lineWidth, 
-    vex::color outlineColor, 
+    neblib::Point p0,
+    neblib::Point p1,
+    neblib::Point p2,
+    int lineWidth,
+    vex::color outlineColor,
     vex::color fillColor)
     : p0(p0),
       p1(p1),
@@ -80,6 +84,16 @@ neblib::Triangle::Triangle(
       outlineColor(outlineColor),
       fillColor(fillColor)
 {
+}
+
+vex::color neblib::Rectangle::getFillColor()
+{
+    return fillColor;
+}
+
+void neblib::Triangle::setFillColor(vex::color color)
+{
+    fillColor = color;
 }
 
 void neblib::Triangle::draw()
@@ -96,14 +110,17 @@ void neblib::Triangle::draw()
 
     Brain.Screen.setPenColor(fillColor);
 
-    for (int y = minY; y <= maxY; ++y) {
-        for (int x = minX; x <= maxX; ++x) {
-            if (contains(Point(x, y))) {
+    for (int y = minY; y <= maxY; ++y)
+    {
+        for (int x = minX; x <= maxX; ++x)
+        {
+            if (contains(Point(x, y)))
+            {
                 Brain.Screen.drawPixel(x, y);
             }
         }
     }
-    
+
     Brain.Screen.setPenWidth(lineWidth);
     Brain.Screen.setPenColor(outlineColor);
 
@@ -114,9 +131,9 @@ void neblib::Triangle::draw()
 
 bool neblib::Triangle::contains(neblib::Point point)
 {
-    const auto cross = [](Point a, Point b, Point point) -> double {
-        return (b.x - a.x) * (point.y - a.y)
-             - (b.y - a.y) * (point.x - a.x);
+    const auto cross = [](Point a, Point b, Point point) -> double
+    {
+        return (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
     };
 
     // Reject triangles with no area.
@@ -131,4 +148,9 @@ bool neblib::Triangle::contains(neblib::Point point)
     const bool hasPositive = d0 > 0 || d1 > 0 || d2 > 0;
 
     return !(hasNegative && hasPositive);
+}
+
+vex::color neblib::Triangle::getFillColor()
+{
+    return fillColor;
 }

@@ -14,8 +14,10 @@ namespace neblib
     public: 
         virtual ~Shape() = default;
 
+        virtual void setFillColor(vex::color color) = 0;
         virtual void draw() = 0;
         virtual bool contains(neblib::Point point) = 0;
+        virtual vex::color getFillColor() = 0;
     };
 
     class Rectangle : public Shape
@@ -49,8 +51,10 @@ namespace neblib
                 int lineWidth, 
                 vex::color outlineColor, 
                 vex::color fillColor);
+        void setFillColor(vex::color color) override;
         void draw() override;
         bool contains(neblib::Point point) override;
+        vex::color getFillColor() override;
     };
 
     class Triangle : public Shape{
@@ -71,7 +75,9 @@ namespace neblib
             int lineWidth,
             vex::color outlineColor,
             vex::color fillColor);
+        void setFillColor(vex::color color) override;
         void draw() override;
         bool contains(neblib::Point point) override;
+        vex::color getFillColor() override;
     };
 }
