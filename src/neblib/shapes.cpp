@@ -1,8 +1,8 @@
 #include "neblib/shapes.hpp"
 
-neblib::Shapes::Rectangle::Rectangle(
-    neblib::Point p0,
-    neblib::Point p1,
+neblib::drawable::Rectangle::Rectangle(
+    neblib::geometry::Point p0,
+    neblib::geometry::Point p1,
     int lineWidth,
     vex::color outlineColor,
     vex::color fillColor,
@@ -20,9 +20,9 @@ neblib::Shapes::Rectangle::Rectangle(
 {
 }
 
-neblib::Shapes::Rectangle::Rectangle(
-    neblib::Point p0,
-    neblib::Point p1,
+neblib::drawable::Rectangle::Rectangle(
+    neblib::geometry::Point p0,
+    neblib::geometry::Point p1,
     int lineWidth,
     vex::color outlineColor,
     vex::color fillColor)
@@ -37,12 +37,12 @@ neblib::Shapes::Rectangle::Rectangle(
 {
 }
 
-void neblib::Shapes::Rectangle::setFillColor(vex::color color)
+void neblib::drawable::Rectangle::setFillColor(vex::color color)
 {
     fillColor = color;
 }
 
-void neblib::Shapes::Rectangle::draw()
+void neblib::drawable::Rectangle::draw()
 {
     Brain.Screen.setPenWidth(lineWidth);
     Brain.Screen.setPenColor(outlineColor);
@@ -65,15 +65,15 @@ void neblib::Shapes::Rectangle::draw()
         text.c_str());
 }
 
-bool neblib::Shapes::Rectangle::contains(neblib::Point point)
+bool neblib::drawable::Rectangle::contains(neblib::geometry::Point point)
 {
     return (point.x >= p0.x) && (point.y >= p0.y) && (point.x <= p1.x) && (point.y <= p1.y);
 }
 
-neblib::Shapes::Triangle::Triangle(
-    neblib::Point p0,
-    neblib::Point p1,
-    neblib::Point p2,
+neblib::drawable::Triangle::Triangle(
+    neblib::geometry::Point p0,
+    neblib::geometry::Point p1,
+    neblib::geometry::Point p2,
     int lineWidth,
     vex::color outlineColor,
     vex::color fillColor)
@@ -86,17 +86,17 @@ neblib::Shapes::Triangle::Triangle(
 {
 }
 
-vex::color neblib::Shapes::Rectangle::getFillColor()
+vex::color neblib::drawable::Rectangle::getFillColor()
 {
     return fillColor;
 }
 
-void neblib::Shapes::Triangle::setFillColor(vex::color color)
+void neblib::drawable::Triangle::setFillColor(vex::color color)
 {
     fillColor = color;
 }
 
-void neblib::Shapes::Triangle::draw()
+void neblib::drawable::Triangle::draw()
 {
     const int minX = static_cast<int>(
         std::ceil(std::min({p0.x, p1.x, p2.x})));
@@ -114,7 +114,7 @@ void neblib::Shapes::Triangle::draw()
     {
         for (int x = minX; x <= maxX; ++x)
         {
-            if (contains(Point(x, y)))
+            if (contains(neblib::geometry::Point(x, y)))
             {
                 Brain.Screen.drawPixel(x, y);
             }
@@ -129,9 +129,9 @@ void neblib::Shapes::Triangle::draw()
     Brain.Screen.drawLine(p0.x, p0.y, p2.x, p2.y);
 }
 
-bool neblib::Shapes::Triangle::contains(neblib::Point point)
+bool neblib::drawable::Triangle::contains(neblib::geometry::Point point)
 {
-    const auto cross = [](Point a, Point b, Point point) -> double
+    const auto cross = [](neblib::geometry::Point a, neblib::geometry::Point b, neblib::geometry::Point point) -> double
     {
         return (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
     };
@@ -150,7 +150,7 @@ bool neblib::Shapes::Triangle::contains(neblib::Point point)
     return !(hasNegative && hasPositive);
 }
 
-vex::color neblib::Shapes::Triangle::getFillColor()
+vex::color neblib::drawable::Triangle::getFillColor()
 {
     return fillColor;
 }
