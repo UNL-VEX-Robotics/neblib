@@ -6,7 +6,7 @@ void neblib::AutonomousSelector::calibrate()
     if (route.length() > MAX_CHAR)
     {
         route.resize(MAX_CHAR - 3);
-        route += "...";
+        route += "..."; 
     }
     Brain.Screen.clearScreen(currentColor);
     Brain.Screen.setPenColor(vex::color::white);
@@ -14,7 +14,7 @@ void neblib::AutonomousSelector::calibrate()
     Brain.Screen.setFont(BUTTON_FONT);
     Brain.Screen.setCursor(1, 1);
     Brain.Screen.print("Route: ");
-    Brain.Screen.print(routes.at(currentRoute).c_str());
+    Brain.Screen.print(route.c_str());
 }
 
 neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
@@ -45,8 +45,8 @@ neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
           neblib::geometry::Point(MID_X + EDGE_BUFFER, RECTANGLE_TOP),
           neblib::geometry::Point(MID_X + RECTANGLE_WIDTH + EDGE_BUFFER, RECTANGLE_TOP + RECTANGLE_HEIGHT),
           PEN_WIDTH,
-          CALIBRATE_TEXT_COLOR,
           OUTLINE_COLOR,
+          OUTLINE_COLOR, 
           CALIBRATE_TEXT_COLOR,
           "Calibrate",
           BUTTON_FONT),
@@ -81,6 +81,11 @@ void neblib::AutonomousSelector::run()
         Brain.Screen.setFillColor(vex::color::black);
         Brain.Screen.setPenColor(vex::color::white);
         std::string currentText = routes.at(currentRoute);
+        if (currentText.length() > MAX_CHAR)
+        {
+            currentText.resize(MAX_CHAR - 3);
+            currentText += "...";
+        }
         int width = Brain.Screen.getStringWidth(currentText.c_str());
         int height = Brain.Screen.getStringHeight(currentText.c_str());
         Brain.Screen.printAt(240 - (width / 2), (TRIANGLE_SIDE_LENGTH / 2) + EDGE_BUFFER + (height / 4), currentText.c_str());

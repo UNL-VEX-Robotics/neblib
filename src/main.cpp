@@ -18,10 +18,10 @@ competition Competition;
 // define your global instances of motors and other devices here
 brain Brain;
 
-neblib::AutonomousSelector autoSelector({
+neblib::AutonomousSelector autoSelector(std::vector<std::string>({
     "Left",
     "Right",
-    "ThisIsOverFiftyCharacters012345678901234567890123456789"});
+    "ThisHasTooManyCharactersToDisplay"}));
 
 
 /*---------------------------------------------------------------------------*/
