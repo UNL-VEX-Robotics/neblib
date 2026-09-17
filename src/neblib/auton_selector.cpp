@@ -2,11 +2,15 @@
 
 void neblib::AutonomousSelector::calibrate()
 {
-    std::string route = routes.at(currentRoute);
+    std::string route;
+    if (routes.empty())
+        route = "No Route";
+    else
+        route = routes.at(currentRoute);
     if (route.length() > MAX_CHAR)
     {
         route.resize(MAX_CHAR - 3);
-        route += "..."; 
+        route += "...";
     }
     Brain.Screen.clearScreen(currentColor);
     Brain.Screen.setPenColor(vex::color::white);
@@ -46,7 +50,7 @@ neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
           neblib::geometry::Point(MID_X + RECTANGLE_WIDTH + EDGE_BUFFER, RECTANGLE_TOP + RECTANGLE_HEIGHT),
           PEN_WIDTH,
           OUTLINE_COLOR,
-          OUTLINE_COLOR, 
+          OUTLINE_COLOR,
           CALIBRATE_TEXT_COLOR,
           "Calibrate",
           BUTTON_FONT),
@@ -66,6 +70,7 @@ void neblib::AutonomousSelector::run()
         Brain.Screen.setFont(ROUTE_FONT);
         Brain.Screen.setCursor(1, 1);
         Brain.Screen.print("No Routes");
+        this->calibrate();
     }
     while (true)
     {
