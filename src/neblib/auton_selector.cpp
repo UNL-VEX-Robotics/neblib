@@ -1,122 +1,155 @@
 #include "neblib/auton_selector.hpp"
 
-neblib::Button::Button(double x, double y, double width, double height, vex::color color, vex::color selectedColor, vex::color textColor, vex::color outlineColor, const char *text) : x(x), y(y), width(width), height(height), color(color), selectedColor(selectedColor), textColor(textColor), outlineColor(outlineColor), text(text), selected(false) {}
-
-neblib::Page::Page(neblib::Button pageButton, std::initializer_list<neblib::Button> buttons) : pageButton(pageButton)
+void neblib::AutonomousSelector::calibrate()
 {
-    for (auto &b : buttons)
-        this->buttons.push_back(b);
+    std::string route;
+    if (routes.empty())
+        route = "No Route";
+    else
+        route = routes.at(currentRoute);
+    if (route.length() > MAX_CHAR)
+    {
+        route.resize(MAX_CHAR - 3);
+        route += "...";
+    }
+    Brain.Screen.clearScreen(currentColor);
+    Brain.Screen.setPenColor(vex::color::white);
+    Brain.Screen.setFillColor(currentColor);
+    Brain.Screen.setFont(BUTTON_FONT);
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Route: ");
+    Brain.Screen.print(route.c_str());
 }
 
-void neblib::Page::addButton(neblib::Button button) { buttons.push_back(button); }
-
-void neblib::Page::addButtons(std::initializer_list<neblib::Button> buttons)
+neblib::AutonomousSelector::AutonomousSelector(std::vector<std::string> routes)
+    : leftArrow(
+          neblib::geometry::Point(EDGE_BUFFER, (TRIANGLE_SIDE_LENGTH / 2) + EDGE_BUFFER),
+          neblib::geometry::Point(TRIANGLE_HEIGHT + EDGE_BUFFER, EDGE_BUFFER),
+          neblib::geometry::Point(TRIANGLE_HEIGHT + EDGE_BUFFER, EDGE_BUFFER + TRIANGLE_SIDE_LENGTH),
+          PEN_WIDTH,
+          OUTLINE_COLOR,
+          TRIANGLE_COLOR),
+      rightArrow(
+          neblib::geometry::Point(RIGHT_X - EDGE_BUFFER, (TRIANGLE_SIDE_LENGTH / 2) + EDGE_BUFFER),
+          neblib::geometry::Point(RIGHT_X - TRIANGLE_HEIGHT - EDGE_BUFFER, EDGE_BUFFER),
+          neblib::geometry::Point(RIGHT_X - TRIANGLE_HEIGHT - EDGE_BUFFER, EDGE_BUFFER + TRIANGLE_SIDE_LENGTH),
+          PEN_WIDTH,
+          OUTLINE_COLOR,
+          TRIANGLE_COLOR),
+      colorButton(
+          neblib::geometry::Point(MID_X - EDGE_BUFFER - RECTANGLE_WIDTH, RECTANGLE_TOP),
+          neblib::geometry::Point(MID_X - EDGE_BUFFER, RECTANGLE_TOP + RECTANGLE_HEIGHT),
+          PEN_WIDTH,
+          OUTLINE_COLOR,
+          RED,
+          TEXT_COLOR,
+          "Color",
+          BUTTON_FONT),
+      calibrateButton(
+          neblib::geometry::Point(MID_X + EDGE_BUFFER, RECTANGLE_TOP),
+          neblib::geometry::Point(MID_X + RECTANGLE_WIDTH + EDGE_BUFFER, RECTANGLE_TOP + RECTANGLE_HEIGHT),
+          PEN_WIDTH,
+          OUTLINE_COLOR,
+          OUTLINE_COLOR,
+          CALIBRATE_TEXT_COLOR,
+          "Calibrate",
+          BUTTON_FONT),
+      routes(std::move(routes)),
+      currentColor(vex::color::red),
+      currentRoute(0)
 {
-    for (auto &b : buttons)
-        this->buttons.push_back(b);
 }
 
-neblib::AutonSelector::AutonSelector(vex::brain &brain, std::initializer_list<neblib::Page *> pages, neblib::Button endButton) : brain(brain), endButton(endButton)
+void neblib::AutonomousSelector::run()
 {
-    for (auto &p : pages)
-        this->pages.push_back(p);
-}
-
-bool neblib::AutonSelector::buttonIsPressed(const neblib::Button &button)
-{
-    double x = brain.Screen.xPosition();
-    double y = brain.Screen.yPosition();
-    return (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height);
-}
-
-void neblib::AutonSelector::drawButton(const neblib::Button &button)
-{
-    // Button
-    const vex::color &color = (button.selected) ? button.selectedColor : button.color;
-    brain.Screen.setFillColor(color);
-    brain.Screen.setPenColor(button.outlineColor);
-    brain.Screen.drawRectangle(button.x, button.y, button.width, button.height);
-
-    // Text
-    int h = brain.Screen.getStringHeight(button.text);
-    int w = brain.Screen.getStringWidth(button.text);
-    brain.Screen.setPenColor(button.textColor);
-    brain.Screen.printAt(button.x + button.width / 2 - w / 2, button.y + button.height / 2 + h / 2, button.text);
-}
-
-void neblib::AutonSelector::runSelector()
-{
+    if (routes.empty())
+    {
+        Brain.Screen.clearScreen(vex::color::black);
+        Brain.Screen.setPenColor(vex::color::red);
+        Brain.Screen.setFillColor(vex::color::black);
+        Brain.Screen.setFont(ROUTE_FONT);
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("No Routes");
+        this->calibrate();
+    }
     while (true)
     {
-        // Draw
-        brain.Screen.clearScreen();
-        for (auto &p : pages)
-        {
-            drawButton(p->pageButton);
-            if (p->pageButton.selected)
-            {
-                for (auto &b : p->buttons)
-                    drawButton(b);
-            }
-        }
-        drawButton(endButton);
-        while (!brain.Screen.pressing())
-            vex::task::sleep(2);
+        // Draw to the Brain Screen
+        Brain.Screen.clearScreen(vex::color::black);
 
-        // Logic
-        if (buttonIsPressed(endButton))
+        rightArrow.draw();
+        leftArrow.draw();
+        calibrateButton.draw();
+        colorButton.draw();
+
+        Brain.Screen.setFont(ROUTE_FONT);
+        Brain.Screen.setFillColor(vex::color::black);
+        Brain.Screen.setPenColor(vex::color::white);
+        std::string currentText = routes.at(currentRoute);
+        if (currentText.length() > MAX_CHAR)
+        {
+            currentText.resize(MAX_CHAR - 3);
+            currentText += "...";
+        }
+        int width = Brain.Screen.getStringWidth(currentText.c_str());
+        int height = Brain.Screen.getStringHeight(currentText.c_str());
+        Brain.Screen.printAt(240 - (width / 2), (TRIANGLE_SIDE_LENGTH / 2) + EDGE_BUFFER + (height / 4), currentText.c_str());
+
+        // Wait until a button is pressed
+        while (!Brain.Screen.pressing())
+            vex::task::sleep(10);
+
+        // convert Brain Screen location to neblib::geometry::Point
+        neblib::geometry::Point pressedPoint(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+
+        // Button logic
+        if (calibrateButton.contains(pressedPoint))
+        {
+            calibrate();
             break;
-
-        for (auto &p : pages)
+        }
+        else if (leftArrow.contains(pressedPoint))
         {
-            if (buttonIsPressed(p->pageButton))
+            currentRoute--;
+            if (currentRoute < 0)
+                currentRoute = routes.size() - 1;
+        }
+        else if (rightArrow.contains(pressedPoint))
+        {
+            currentRoute++;
+            if (currentRoute >= routes.size())
+                currentRoute = 0;
+        }
+        else if (colorButton.contains(pressedPoint))
+        {
+            if (currentColor == vex::color::red)
             {
-                for (auto &page : pages)
-                    page->pageButton.selected = false;
-                p->pageButton.selected = true;
+                currentColor = vex::color::blue;
+                colorButton.setFillColor(BLUE);
             }
-
-            if (p->pageButton.selected)
+            else
             {
-                for (auto &b : p->buttons)
-                {
-                    if (buttonIsPressed(b))
-                    {
-                        for (auto &page : pages)
-                        {
-                            for (auto &button : page->buttons)
-                                button.selected = false;
-                        }
-                        b.selected = true;
-                    }
-                }
+                currentColor = vex::color::red;
+                colorButton.setFillColor(RED);
             }
         }
 
-        while (brain.Screen.pressing())
-            vex::task::sleep(2);
-    }
-}
-
-const char *neblib::AutonSelector::getAuton()
-{
-    for (auto &p : pages)
-    {
-        for (auto &b : p->buttons)
+        // Wait until the screen is released or RETRIGGER_MS milliseconds to retrigger
+        for (int i = 0; i < RETRIGGER_MS; i += 10)
         {
-            if (b.selected)
-                return b.text;
+            if (!Brain.Screen.pressing())
+                break;
+            vex::task::sleep(10);
         }
     }
-
-    return nullptr;
 }
 
-vex::color neblib::AutonSelector::getColor()
+vex::color neblib::AutonomousSelector::getColor()
 {
-    const char *auton = this->getAuton();
-    if (neblib::contains(auton, "blue"))
-        return vex::color::blue;
-    else
-        return vex::color::red;
+    return currentColor;
+}
+
+int neblib::AutonomousSelector::getRoute()
+{
+    return currentRoute;
 }

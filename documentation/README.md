@@ -20,9 +20,10 @@ The documentation should be read alongside the header files in [`include/neblib`
 - [`position_tracking.md`](neblib/position_tracking.md) explains poses, tracker-wheel setup, and odometry.
 - [`control_algorithms.md`](neblib/control_algorithms.md) documents feedback controllers and PID configuration.
 - [`standard_drive.md`](neblib/standard_drive.md) documents differential-drive controls and autonomous movements.
+- [`auton_selector.md`](neblib/auton_selector.md) documents touchscreen route selection, alliance colors, and confirmation.
 - [`documentation.md`](neblib/documentation.md) describes documentation-related conventions and guidance.
 
-More pages will be added as the library is documented. Planned topics include other drive systems, autonomous selection, and device helpers.
+More pages will be added as the library is documented. Planned topics include other drive systems and device helpers.
 
 ## Who This Documentation Is For
 

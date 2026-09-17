@@ -8,7 +8,7 @@ The "Nebraska Library," or `neblib`, is a library created and maintained by the 
 * Position tracking with a pose interface, two-wheel odometry, a VEX Inertial Sensor, and a tracker-wheel abstraction for VEX Rotation Sensors
 * Differential-drive control with tank and arcade inputs, turns, straight-line movements, and swing turns
 * X-drive control with local, directional, and field-centric inputs, plus autonomous turns and movements to coordinates or poses
-* A touchscreen autonomous selector with pages, selectable routines, and alliance-color selection
+* A [touchscreen autonomous selector](documentation/neblib/auton_selector.md) with wraparound route navigation, alliance-color selection, and selection confirmation
 * A pneumatic-cylinder helper with set, toggle, and state-reading operations
 * General-purpose task, angle-conversion, clamping, wrapping, random-number, sign, and string utilities
 
