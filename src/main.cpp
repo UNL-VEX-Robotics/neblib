@@ -9,6 +9,7 @@
 
 #include "vex.h"
 #include "neblib/auton_selector.hpp"
+#include "neblib/optional.hpp"
 
 using namespace vex;
 
@@ -17,12 +18,6 @@ competition Competition;
 
 // define your global instances of motors and other devices here
 brain Brain;
-
-neblib::AutonomousSelector autoSelector(std::vector<std::string>({
-    "Left",
-    "Right",
-    "ThisHasTooManyCharactersToDisplay"}));
-
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -33,10 +28,15 @@ neblib::AutonomousSelector autoSelector(std::vector<std::string>({
 /*  function is only called once after the V5 has been powered on and        */
 /*  not every time that the robot is disabled.                               */
 /*---------------------------------------------------------------------------*/
+#include <iostream>
 
 void pre_auton(void)
 {
-    autoSelector.run();
+    neblib::util::Optional<int> o;
+    Brain.Screen.print(o.value());
+    task::sleep(100);
+    Brain.Screen.setCursor(2, 1);
+    Brain.Screen.print(o.hasValue());
 }
 
 void autonomous(void)
