@@ -134,3 +134,105 @@ neblib::Pose neblib::Odometry::getPose()
     mutex.unlock();
     return copy;
 }
+
+neblib::SparkFunOdometry::SparkFunOdometry(
+    std::shared_ptr<neblib::Coprocessor> coprocessor,
+    float xOffset,
+    float yOffset,
+    float headingOffset)
+    : coprocessor(std::move(coprocessor))
+{
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_SET_OFFSETS, // todo: separate the bytes of the floats
+                            0,                                         // Byte 1 of xOffset
+                            0,                                         // Byte 2 of xOffset
+                            0,                                         // Byte 3 of xOffset
+                            0,                                         // Byte 4 of xOffset
+                            0,                                         // Byte 1 of yOffset
+                            0,                                         // Byte 2 of yOffset
+                            0,                                         // Byte 3 of yOffset
+                            0,                                         // Byte 4 of yOffset
+                            0,                                         // Byte 1 of headingOffset
+                            0,                                         // Byte 2 of headingOffset
+                            0,                                         // Byte 3 of headingOffset
+                            0};                                        // Byte 4 of headingOffset
+
+    this->coprocessor->send(sendBuffer, sizeof(sendBuffer), 500);
+}
+
+int neblib::SparkFunOdometry::begin()
+{
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_START};
+    coprocessor->send(sendBuffer, sizeof(sendBuffer));
+
+    return 0;
+}
+
+void neblib::SparkFunOdometry::stop()
+{
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_STOP};
+    coprocessor->send(sendBuffer, sizeof(sendBuffer));
+}
+
+void neblib::SparkFunOdometry::calibrate()
+{
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_CALIBRATE};
+    coprocessor->send(sendBuffer, sizeof(sendBuffer), 5000);
+}
+
+void neblib::SparkFunOdometry::setPose(neblib::Pose pose)
+{
+    this->setPose(pose.x, pose.y, pose.heading);
+}
+
+void neblib::SparkFunOdometry::setPose(double x, double y, double heading)
+{
+    float x_f = static_cast<float>(x);
+    float y_f = static_cast<float>(y);
+    float heading_f = static_cast<float>(heading);
+
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_SET_POSE, // todo: separate the bytes of the floats
+                            0,                                      // Byte 1 of x
+                            0,                                      // Byte 2 of x
+                            0,                                      // Byte 3 of x
+                            0,                                      // Byte 4 of x
+                            0,                                      // Byte 1 of y
+                            0,                                      // Byte 2 of y
+                            0,                                      // Byte 3 of y
+                            0,                                      // Byte 4 of y
+                            0,                                      // Byte 1 of heading
+                            0,                                      // Byte 2 of heading
+                            0,                                      // Byte 3 of heading
+                            0};                                     // Byte 4 of heading
+    coprocessor->send(sendBuffer, sizeof(sendBuffer));
+}
+
+neblib::Pose neblib::SparkFunOdometry::getPose()
+{
+    uint8_t sendBuffer[] = {neblib::Coprocessor::ODOMETRY_GET_POSE};
+    uint8_t receiveBuffer[13]; // todo: Test if this needs to be larger, in theory it doesn't
+    uint32_t readCount = coprocessor->sendReceive(sendBuffer, sizeof(sendBuffer), receiveBuffer, sizeof(receiveBuffer), 5);
+
+    if (readCount != 13)
+        return neblib::Pose(
+            std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity());
+    if (receiveBuffer[0] != neblib::Coprocessor::ODOMETRY_POSE) // first byte should be a verification
+        return neblib::Pose(
+            std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity());
+
+    float x_f = 0.0f;
+    float y_f = 0.0f;
+    float heading_f = 0.0f;
+
+    // todo: Read the input and assign the bytes to the float variables
+    // Bytes 2-5 should b for x_f
+    // Bytes 6-9 should be for y_f
+    // Bytes 10-13 should be for heading_f
+
+    return neblib::Pose(static_cast<double>(x_f),
+                        static_cast<double>(y_f),
+                        static_cast<double>(heading_f));
+}

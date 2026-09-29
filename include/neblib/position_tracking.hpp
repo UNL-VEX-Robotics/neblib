@@ -1,5 +1,6 @@
 #pragma once
 
+#include "neblib/devices/coprocessor.hpp"
 #include "neblib/devices/tracker_wheel.hpp"
 #include "neblib/util.hpp"
 #include "vex.h"
@@ -134,6 +135,52 @@ namespace neblib
 
         /// @brief Gets the current pose of the robot
         /// @return neblib::Pose containing 'x', 'y', and orientation values
+        Pose getPose() override;
+    };
+
+    /// @brief Position Tracking using the SparkFun Optical Tracking Sensor
+    /// https://www.sparkfun.com/sparkfun-optical-tracking-odometry-sensor-paa5160e1-qwiic.html?srsltid=AU7gw4UiMMjNofRn6p_wUAZ5bdWQFBaSCFzC7dSJjohrdP0k1pnXh9Hv
+    class SparkFunOdometry final : public PositionTracking
+    {
+    private:
+        std::shared_ptr<neblib::Coprocessor> coprocessor;
+    public:
+        /// @brief Constructs a SparkFunOdometry object
+        /// @param coprocessor std::shared_ptr of a neblib::Coprocessor
+        /// @param xOffset distance from center of the robot to the sensor, x-axis
+        /// @param yOffset distance from center of the robot to the sensor, y-axis
+        /// @param headingOffset rotation offset, clockwise positive
+        SparkFunOdometry(
+            std::shared_ptr<neblib::Coprocessor> coprocessor,
+            float xOffset,
+            float yOffset,
+            float headingOffset);
+
+        /// @brief Begins the position tracking
+        /// @return always 0
+        int begin() override;
+
+        /// @brief Stops the position tracking
+        void stop() override;
+
+        /// @brief calibrates the sparkfun sensor
+        void calibrate() override;
+
+        /// @brief Sets the pose of the robot
+        /// @param pose neblib::Pose containing x, y, and heading
+        void setPose(neblib::Pose pose) override;
+
+        /// @brief Sets the pose of the robot
+        /// @param x x-position
+        /// @param y y-position
+        /// @param heading heading
+        void setPose(
+            double x,
+            double y,
+            double heading) override;
+
+        /// @brief Gets the current pose of the robot
+        /// @return (∞,∞,∞) if there was an error, the pose of the robot otherwise.
         Pose getPose() override;
     };
 
