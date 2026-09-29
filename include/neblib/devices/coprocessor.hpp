@@ -25,7 +25,7 @@ namespace neblib
     public:
         Teensy(uint32_t index);
 
-        int32_t sendAndReceive(
+        int32_t sendReceive(
             uint8_t *sendBuffer,
             int32_t sendLength,
             uint8_t *readBuffer,

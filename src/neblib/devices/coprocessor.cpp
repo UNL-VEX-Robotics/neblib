@@ -7,7 +7,7 @@ neblib::Teensy::Teensy(uint32_t index)
     baud(115200);
 }
 
-int32_t neblib::Teensy::sendAndReceive(
+int32_t neblib::Teensy::sendReceive(
     uint8_t *sendBuffer,
     int32_t sendLength,
     uint8_t *readBuffer,
