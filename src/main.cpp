@@ -18,12 +18,6 @@ competition Competition;
 // define your global instances of motors and other devices here
 brain Brain;
 
-neblib::AutonomousSelector autoSelector(std::vector<std::string>({
-    "Left",
-    "Right",
-    "ThisHasTooManyCharactersToDisplay"}));
-
-
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
 /*                                                                           */
@@ -36,7 +30,6 @@ neblib::AutonomousSelector autoSelector(std::vector<std::string>({
 
 void pre_auton(void)
 {
-    autoSelector.run();
 }
 
 void autonomous(void)
