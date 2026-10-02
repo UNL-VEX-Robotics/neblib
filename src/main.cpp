@@ -9,6 +9,8 @@
 
 #include "vex.h"
 #include "neblib/auton_selector.hpp"
+#include <string>
+#include <vector>
 
 using namespace vex;
 
