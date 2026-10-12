@@ -3,16 +3,21 @@
 #include "vex.h"
 #include <cstdint>
 #include <functional>
-#include <unordered_map>
+#include <map>
 
 namespace neblib {
     template <typename StateEnum>
     class StateMachine {
-        public:
-        struct StateCallbacks {
-            std::function<void()> entry;
-            std::function<void()> update;
-            std::function<void()> exit;
+        public:   /// PUBLIC ///
+
+        //
+        // Structs and class definitions
+        //
+        struct StateCallbacks 
+        {
+            std::function<void()> entry = [](){};
+            std::function<void()> update = [](){};
+            std::function<void()> exit = [](){};
 
             StateCallbacks(std::function<void()> en, std::function<void()> up, std::function<void()> ex)
                 : entry(en), update(up), exit(ex) {}
@@ -20,7 +25,8 @@ namespace neblib {
         };
 
         template <typename State>
-        struct Registration {
+        struct Registration 
+        {
             State state;
             StateCallbacks stateCallbacks;
 
@@ -29,75 +35,166 @@ namespace neblib {
             Registration() = default;
         };
 
-        StateMachine(Registration<StateEnum> initialState, uint32_t time) {
-            startTime = time;
+        StateMachine(
+            Registration<StateEnum> initialState, 
+            uint32_t& robotTime) 
+            : robotTime(robotTime) 
+        {
+            stopped = true;
+            pendingStateChange = false;
+            executingCallback = false;
             registerState(initialState);
             pendingState = initialState.state;
             currentState = initialState.state;
-            pendingStateChange = false;
-            start();
         }
 
-        void periodic() {
-            if (stopped) return;
+        StateMachine(
+            std::map<StateEnum, Registration<StateEnum>> registrations, 
+            StateEnum initialState,
+            uint32_t& robotTime) 
+            : robotTime(robotTime) 
+        {
+            stopped = true;
+            pendingStateChange = false;
+            executingCallback = false;
+            for (const auto& pair : registrations) {
+                registerState(pair.second);
+            }
+            pendingState = initialState;
+            currentState = initialState;
+        }
+
+
+        //
+        // Primary state machine methods
+        //
+        void periodic() 
+        {
+            if (stopped || executingCallback) return;
             if (pendingStateChange) {
                 reset(pendingState);
-                return;
             }
-            update();
+            if (registrationExists(getCurrentState())) {
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.update);
+            }
         }
 
-        void requestStateChange(StateEnum state) {
-            if (pendingStateChange || !registrations.contains(state)) return;
+        bool requestStateChange(StateEnum state) 
+        {
+            if (stopped ||pendingStateChange || !(registrationExists(state))) return false;
             if (state != getCurrentState()) {
                 pendingState = state;
                 pendingStateChange = true;
             }
-            return;
+            return true;
         }
 
-        void start() {
+        void start() 
+        {
+            if (!stopped || executingCallback || !registrationExists(getCurrentState())) return;
+            captureTime();
+            if (registrationExists(getCurrentState())) {
+                stopped = false;
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.entry);
+            }
+        }
+
+        void stop() 
+        {
+            if (executingCallback) return;
+            if (!stopped && registrationExists(getCurrentState())) {
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.exit);
+            }
+            stopped = true;
+            pendingStateChange = false;
+        }
+
+        bool reset(StateEnum state) 
+        {
+            if (!registrationExists(state) || executingCallback) return false;
+            pendingStateChange = false;
+            if (!stopped) {
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.exit);
+            }
+            setCurrentState(state);
             stopped = false;
-            registrations[getCurrentState()].stateCallbacks.entry();
+            captureTime();
+            executeCallback(registrations.find(state)->second.stateCallbacks.entry);
+            return true;
         }
 
-        std::unordered_map<StateEnum, Registration<StateEnum>> registrations;
+        bool reset() 
+        {
+            if (executingCallback) return false;
+            if (!stopped && registrationExists(getCurrentState())) {
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.exit);
+            }
+            stopped = false;
+            captureTime();
+            if (registrationExists(getCurrentState())) {
+                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.entry);
+            }
+            return true;
+        }
 
-        void registerState(StateEnum state, 
+        bool registerState(StateEnum state, 
             std::function<void()> entry,
             std::function<void()> update,
-            std::function<void()> exit) {
+            std::function<void()> exit) 
+        {
+            if (registrationExists(state) || !stopped) return false;
             registrations[state] = Registration<StateEnum>(state, StateCallbacks(entry, update, exit));
+            return true;
         }
 
-        void registerState(Registration<StateEnum> registration) {
+        bool registerState(Registration<StateEnum> registration) 
+        {
+            if (registrationExists(registration.state) || !stopped) return false;
             registrations[registration.state] = registration;
+            return true;
         }
 
-        uint32_t getStartTime();
-        void setStartTime();
+        uint32_t getStartTime() 
+        {
+            return startTime;
+        }
 
-        StateEnum getPendingState() {
+        void setStartTime(uint32_t time) 
+        {
+            startTime = time;
+        }
+
+        StateEnum getPendingState() 
+        {
             return pendingState;
         }
 
-        StateEnum getCurrentState() {
+        StateEnum getCurrentState() 
+        {
             return currentState;
         }
 
 
-        private:
+        private:     /// PRIVATE ///
 
-        uint32_t startTime;
+        // Timing
+        uint32_t& robotTime;
+        uint32_t startTime = 0;
 
+        // State handling
         bool pendingStateChange;
         StateEnum pendingState;
         StateEnum currentState;
         StateEnum disabledState;
 
+        // Flags
         bool stopped;
+        bool executingCallback;
 
-        bool setPendingState(StateEnum state) {
+        std::map<StateEnum, Registration<StateEnum>> registrations;
+
+        bool setPendingState(StateEnum state) 
+        {
             if (state != pendingState) {
                 pendingState = state;
                 return true;
@@ -105,7 +202,8 @@ namespace neblib {
             return false;
         }
 
-        bool setCurrentState(StateEnum state) {
+        bool setCurrentState(StateEnum state) 
+        {
             if (state != currentState) {
                 currentState = state;
                 return true;
@@ -113,26 +211,26 @@ namespace neblib {
             return false;
         }
 
-        void update() {
-            registrations[getCurrentState()].stateCallbacks.update();
-        }
-
-        void reset(StateEnum state) {
-            if (!stopped) {
-                registrations[getCurrentState()].stateCallbacks.exit();
+        void executeCallback(const std::function<void()>& callback) 
+        {
+            if (callback) {
+                executingCallback = true;
+                callback();
+                executingCallback = false;
             }
-            setCurrentState(state);
-            pendingStateChange = false;
-            registrations[getCurrentState()].stateCallbacks.entry();
         }
 
-        void stop() {
-            if (!stopped) {
-                registrations[getCurrentState()].stateCallbacks.exit();
-            }
-            stopped = true;
+        private:     /// PRIVATE ///
+
+        //
+        bool registrationExists(StateEnum state) 
+        {
+            return registrations.find(state) != registrations.end();
         }
 
-        void captureTime(); // TODO make this able to capture the current robot time
+        void captureTime() 
+        {
+            setStartTime(robotTime);
+        }
     };
 }
