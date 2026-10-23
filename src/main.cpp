@@ -9,10 +9,12 @@
 
 #include "vex.h"
 #include "neblib/auton_selector.hpp"
+#include "robot_container.hpp"
 #include <string>
 #include <vector>
 
 using namespace vex;
+using namespace neblib;
 
 // A global instance of competition
 competition Competition;
@@ -20,7 +22,11 @@ competition Competition;
 // define your global instances of motors and other devices here
 brain Brain;
 
-neblib::AutonomousSelector autoSelector(std::vector<std::string>({
+uint32_t robotTime = vex::timer::system();
+
+RobotContainer robotContainer(robotTime);
+
+AutonomousSelector autoSelector(std::vector<std::string>({
     "Left",
     "Right",
     "ThisHasTooManyCharactersToDisplay"}));
@@ -83,6 +89,8 @@ int main()
     // Prevent main from exiting with an infinite loop.
     while (true)
     {
+        robotTime = vex::timer::system();
+        robotContainer.periodic();
         wait(100, msec);
     }
 }

@@ -81,7 +81,7 @@ namespace neblib {
 
         bool requestStateChange(StateEnum state) 
         {
-            if (stopped ||pendingStateChange || !(registrationExists(state))) return false;
+            if (stopped || pendingStateChange || !(registrationExists(state))) return false;
             if (state != getCurrentState()) {
                 pendingState = state;
                 pendingStateChange = true;
@@ -125,15 +125,20 @@ namespace neblib {
 
         bool reset() 
         {
-            if (executingCallback) return false;
-            if (!stopped && registrationExists(getCurrentState())) {
+            // Exit early if within a callback or if the current state is not registered
+            if (executingCallback || !registrationExists(getCurrentState())) return false;
+
+            // Clear pendingStateChange for the exit callback 
+            pendingStateChange = false;
+
+            if (!stopped) {
                 executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.exit);
             }
+
             stopped = false;
             captureTime();
-            if (registrationExists(getCurrentState())) {
-                executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.entry);
-            }
+            executeCallback(registrations.find(getCurrentState())->second.stateCallbacks.entry);
+            
             return true;
         }
 
@@ -220,9 +225,6 @@ namespace neblib {
             }
         }
 
-        private:     /// PRIVATE ///
-
-        //
         bool registrationExists(StateEnum state) 
         {
             return registrations.find(state) != registrations.end();

@@ -9,7 +9,7 @@ namespace neblib {
     class Subsystem {
         public:   /// PUBLIC ///
 
-        Subsystem(uint32_t& robotTime) : robotTime(robotTime) {}
+        Subsystem(uint32_t& robotTime, StateEnum initialState) : stateMachine({}, initialState, robotTime), robotTime(robotTime) {}
 
         StateMachine<StateEnum> stateMachine;
 

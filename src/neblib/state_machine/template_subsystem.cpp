@@ -8,19 +8,15 @@ enum SubsystemState { // TODO RENAME THIS ENUM AND CREATE STATES
 
 using namespace neblib;
 
-class MySubsystem : Subsystem<SubsystemState> { // TODO RENAME THIS CLASS
+class MySubsystem : public Subsystem<SubsystemState> { // TODO RENAME THIS CLASS
 public:
-    MySubsystem(uint32_t& robotTime) : Subsystem<SubsystemState>(robotTime) {
+    MySubsystem(uint32_t& robotTime) : Subsystem<SubsystemState>(robotTime, SubsystemState::IDLE) {
         // Create the motors and other devices for the subsystem here
 
         // Register the states for the subsystem 
         registerStates();
 
-        // Set the initial state of the subsystem
-        stateMachine.requestStateChange(IDLE);
-
-        // Start the state machine
-        stateMachine.reset();
+        stateMachine.start(); // Start the state machine
     }
 
     void periodic() override {
@@ -29,7 +25,7 @@ public:
     }
 
 private:
-    void registerStates() {
+    void registerStates() override {
         // Here is where you will register the states for the subsystem. 
         // You can add more states and their corresponding callbacks as needed.
         stateMachine.registerState(

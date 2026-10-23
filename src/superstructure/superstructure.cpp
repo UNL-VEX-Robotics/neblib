@@ -2,13 +2,9 @@
 #include "neblib/state_machine/state_machine.hpp"
 
 namespace neblib {
-
+    
     Superstructure::Superstructure(uint32_t& robotTime) 
-        : stateMachine(
-                StateMachine<SuperstructureState>::Registration<SuperstructureState>(
-                SuperstructureState::IDLE, 
-                StateMachine<SuperstructureState>::StateCallbacks([](){}, [](){}, [](){})
-            )), 
+        : stateMachine({}, SuperstructureState::IDLE, robotTime), 
         robotTime(robotTime) 
     {
         // Create the subsystems here

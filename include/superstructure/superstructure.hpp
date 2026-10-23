@@ -5,15 +5,15 @@
 #include "neblib/state_machine/subsystem.hpp"
 
 namespace neblib {
-    enum SuperstructureState { // TODO RENAME THIS ENUM AND CREATE STATES
-        IDLE,
-    };
 
     class Superstructure {
         public:   /// PUBLIC ///
 
+        enum SuperstructureState { // TODO RENAME THIS ENUM AND CREATE STATES
+            IDLE,
+        };
+
         Superstructure(uint32_t& robotTime);
-        Superstructure(uint32_t& robotTime, StateMachine<SuperstructureState> stateMachine);
 
         StateMachine<SuperstructureState> stateMachine;
 
