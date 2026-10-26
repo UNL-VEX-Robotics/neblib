@@ -21,6 +21,7 @@ The documentation should be read alongside the header files in [`include/neblib`
 - [`control_algorithms.md`](neblib/control_algorithms.md) documents feedback controllers and PID configuration.
 - [`standard_drive.md`](neblib/standard_drive.md) documents differential-drive controls and autonomous movements.
 - [`auton_selector.md`](neblib/auton_selector.md) documents touchscreen route selection, alliance colors, and confirmation.
+- [`state_machine.md`](neblib/state_machine.md) documents state callbacks, lifecycle operations, timing, and the subsystem base class.
 - [`documentation.md`](neblib/documentation.md) describes documentation-related conventions and guidance.
 
 More pages will be added as the library is documented. Planned topics include other drive systems and device helpers.
