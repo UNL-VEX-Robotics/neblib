@@ -22,8 +22,17 @@ int32_t neblib::Coprocessor::sendReceive(
         mutex.unlock();
         return -1;
     }
-    int32_t result = receive(readBuffer, readLength, timeout);
+    int32_t result = vex::serial_link::receive(readBuffer, readLength, timeout);
 
+    mutex.unlock();
+    return result;
+}
+
+//DEBUG ONLY
+int32_t neblib::Coprocessor::receive(uint8_t *readBuffer, int32_t readLength, int32_t timeout)
+{
+    mutex.lock();
+    int32_t result = vex::serial_link::receive(readBuffer, readLength, timeout);
     mutex.unlock();
     return result;
 }
