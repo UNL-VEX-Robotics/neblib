@@ -32,7 +32,9 @@ int32_t neblib::Coprocessor::sendReceive(
 int32_t neblib::Coprocessor::receive(uint8_t *readBuffer, int32_t readLength, int32_t timeout)
 {
     mutex.lock();
+
     int32_t result = vex::serial_link::receive(readBuffer, readLength, timeout);
+    
     mutex.unlock();
     return result;
 }
@@ -47,7 +49,7 @@ bool neblib::Coprocessor::ping(int32_t timeout)
     if (receivedCount != 1)
         return false;
 
-    if (receiveBuffer[0] == SUCCESS)
+    if (receiveBuffer[0] == PING_SUCCESS)
         return true;
     else
         return false; 

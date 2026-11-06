@@ -28,7 +28,7 @@ namespace neblib
         enum Result : uint8_t
         {
             ERROR = 0, // general
-            PING = 0x55, // ping response
+            PING_SUCCESS = 0x55, // ping response
             SUCCESS = 0x67,
 
             ODOMETRY_POSE = 2, // Odometry
