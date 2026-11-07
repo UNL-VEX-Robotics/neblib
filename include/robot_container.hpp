@@ -15,7 +15,10 @@ namespace neblib {
         XDrive xDrive;
 
         /// @brief The driver controller for the robot, used for manual control.
-        vex::controller driverController;
+        vex::controller driver;
+
+        /// @brief The partner controller for the robot, used for additional manual control.
+        vex::controller partner;
 
         /// @brief Configures the button bindings for the robot's controller.
         /// @details This method sets up the mappings between controller buttons and robot actions, 
