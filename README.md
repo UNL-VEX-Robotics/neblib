@@ -11,6 +11,10 @@ The "Nebraska Library," or `neblib`, is a library created and maintained by the 
 * A [touchscreen autonomous selector](documentation/neblib/auton_selector.md) with wraparound route navigation, alliance-color selection, and selection confirmation
 * A pneumatic-cylinder helper with set, toggle, and state-reading operations
 * General-purpose task, angle-conversion, clamping, wrapping, random-number, sign, and string utilities
+* An [enum-based state machine](documentation/neblib/state_machine.md) with entry, update, and exit callbacks, deferred transition requests, start/stop/reset operations, and state-entry timestamps
+* A [subsystem base class](documentation/neblib/state_machine.md#subsystem-base) with a shared clock reference and periodic updates controlled by the caller
+
+State-machine lifecycle testing and robot integration are still in progress.
 
 ## Requirements for Use
 
