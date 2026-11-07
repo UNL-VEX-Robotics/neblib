@@ -1,3 +1,5 @@
+
+// Ports that correspond to the Brain's physical ports, used for initializing motors and sensors
 namespace Ports 
 {
     // Drivetrain motor ports
@@ -20,6 +22,7 @@ namespace Ports
 namespace DriveConstants 
 {
     // NON-CONFIGURABLE CONSTANTS (extern const)
+
     /// @brief The maximum speed of the robot in meters per second.
     extern const double MAX_SPEED;
 
